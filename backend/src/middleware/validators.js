@@ -40,6 +40,21 @@ export const registerValidation = [
     .escape(),
 ];
 
+// Validation rules for user login
+export const loginValidation = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email address')
+    .normalizeEmail(),
+
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required'),
+];
+
 // Middleware to check validation results and return 400 on failure
 export const validate = (req, res, next) => {
   const errors = validationResult(req);
