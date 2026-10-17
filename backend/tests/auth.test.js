@@ -240,5 +240,86 @@ describe('POST /api/auth/login', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.token).toBeDefined();
   });
+
+  test('should trim whitespace from email on login', async () => {
+    const res = await request.post('/api/auth/login').send({
+      email: `  ${validUser.email}  `,
+      password: validUser.password,
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.token).toBeDefined();
+  });
+
+  test('should return 400 when email format is invalid on login', async () => {
+    const res = await request.post('/api/auth/login').send({
+      email: 'not-an-email',
+      password: validUser.password,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ field: 'email' }),
+      ])
+    );
+  });
+
+  test('should verify token integrity and expiration using jwt.verify (B-041)', async () => {
+    const res = await request.post('/api/auth/login').send({
+      email: validUser.email,
+      password: validUser.password,
+    });
+
+    expect(res.status).toBe(200);
+    const secret = process.env.JWT_SECRET || 'fallback_jwt_secret';
+    const verified = jwt.verify(res.body.data.token, secret);
+
+    expect(verified).toBeDefined();
+    expect(verified.id).toBeDefined();
+    expect(verified.role).toBe('customer');
+    expect(verified.exp).toBeGreaterThan(Math.floor(Date.now() / 1000));
+  });
+
+  test('should return correct role in token for staff or admin user (B-039)', async () => {
+    const adminUser = {
+      name: 'Admin User',
+      email: 'admin@example.com',
+      password: 'password123',
+      phone: '9876543211',
+      vehicleNumber: 'KA02CD5678',
+      role: 'admin',
+    };
+    await User.create(adminUser);
+
+    const res = await request.post('/api/auth/login').send({
+      email: adminUser.email,
+      password: adminUser.password,
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.user.role).toBe('admin');
+
+    const decoded = jwt.decode(res.body.data.token);
+    expect(decoded.role).toBe('admin');
+  });
+
+  test('should reject NoSQL injection attempts with 400 validation error (SEC-003)', async () => {
+    const res = await request.post('/api/auth/login').send({
+      email: { $gt: '' },
+      password: validUser.password,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+
+  test('should return 400 when empty body is sent to login', async () => {
+    const res = await request.post('/api/auth/login').send({});
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors.length).toBeGreaterThanOrEqual(2);
+  });
 });
 
