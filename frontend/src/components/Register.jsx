@@ -185,40 +185,38 @@ export default function Register({ onSwitchToLogin }) {
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="phone" className="form-label">Phone Number</label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              className={`form-input ${errors.phone ? 'input-error' : ''}`}
-              placeholder="9876543210"
-              value={formData.phone}
-              onChange={handleChange}
-              disabled={loading}
-            />
-            {errors.phone && <span className="error-text">{errors.phone}</span>}
-          </div>
+        <div className="form-group">
+          <label htmlFor="phone" className="form-label">Phone Number</label>
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            className={`form-input ${errors.phone ? 'input-error' : ''}`}
+            placeholder="9876543210"
+            value={formData.phone}
+            onChange={handleChange}
+            disabled={loading}
+          />
+          {errors.phone && <span className="error-text">{errors.phone}</span>}
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="vehicleNumber" className="form-label">
-              Primary Vehicle Reg. Number
-            </label>
-            <input
-              id="vehicleNumber"
-              name="vehicleNumber"
-              type="text"
-              className={`form-input ${errors.vehicleNumber ? 'input-error' : ''}`}
-              placeholder="KA01AB1234"
-              value={formData.vehicleNumber}
-              onChange={handleChange}
-              disabled={loading}
-            />
-            {errors.vehicleNumber && (
-              <span className="error-text">{errors.vehicleNumber}</span>
-            )}
-          </div>
+        <div className="form-group">
+          <label htmlFor="vehicleNumber" className="form-label">
+            Primary Vehicle Reg. Number
+          </label>
+          <input
+            id="vehicleNumber"
+            name="vehicleNumber"
+            type="text"
+            className={`form-input ${errors.vehicleNumber ? 'input-error' : ''}`}
+            placeholder="KA01AB1234"
+            value={formData.vehicleNumber}
+            onChange={handleChange}
+            disabled={loading}
+          />
+          {errors.vehicleNumber && (
+            <span className="error-text">{errors.vehicleNumber}</span>
+          )}
         </div>
 
         <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
