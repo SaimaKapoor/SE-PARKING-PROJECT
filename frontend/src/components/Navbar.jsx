@@ -13,7 +13,6 @@ export default function Navbar({ user, activeTab, onSelectTab, onLogout }) {
             }
           }}
         >
-          <span className="navbar-logo">PARK</span>
           <span className="navbar-title">Smart Parking System</span>
         </div>
 

@@ -70,9 +70,7 @@ export default function App() {
         )}
       </main>
 
-      <footer className="footer">
-        <p>QR-Based Vehicle Parking Management System</p>
-      </footer>
+
     </div>
   );
 }
