@@ -40,6 +40,47 @@ export const registerValidation = [
     .escape(),
 ];
 
+// Validation rules for user login
+export const loginValidation = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email address')
+    .normalizeEmail(),
+
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required'),
+];
+
+// Validation rules for vehicle registration
+export const vehicleValidation = [
+  body('vehicleNumber')
+    .trim()
+    .notEmpty()
+    .withMessage('Vehicle registration number is required')
+    .isLength({ min: 2, max: 20 })
+    .withMessage('Vehicle number must be between 2 and 20 characters')
+    .escape(),
+
+  body('vehicleType')
+    .trim()
+    .notEmpty()
+    .withMessage('Vehicle type is required')
+    .toLowerCase()
+    .isIn(['2-wheeler', '4-wheeler', 'two-wheeler', 'four-wheeler'])
+    .withMessage('Vehicle type must be 2-wheeler or 4-wheeler'),
+
+  body('model')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Model name cannot exceed 100 characters')
+    .escape(),
+];
+
 // Middleware to check validation results and return 400 on failure
 export const validate = (req, res, next) => {
   const errors = validationResult(req);

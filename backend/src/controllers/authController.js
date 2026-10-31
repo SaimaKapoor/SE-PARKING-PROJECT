@@ -1,44 +1,99 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+/**
+ * POST /api/auth/register
+ * Register a new user account.
+ *
+ * Request body: { name, email, password, phone, vehicleNumber }
+ * Success response (201): { success, message, data: { user } }
+ * Conflict response (409): duplicate email
+ * Error response (500): server error
+ */
 export const register = async (req, res) => {
   try {
     const { name, email, password, phone, vehicleNumber } = req.body;
+
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ success: false, message: 'An account with this email already exists' });
+      return res.status(409).json({
+        success: false,
+        message: 'An account with this email already exists',
+      });
     }
-    const user = await User.create({ name, email, password, phone, vehicleNumber });
-    return res.status(201).json({ success: true, message: 'Registration successful', data: { user } });
+
+    // Create user (password hashing handled by pre-save hook)
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      vehicleNumber,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+      data: { user },
+    });
   } catch (error) {
-    if (error?.code === 11000) {
-      return res.status(409).json({ success: false, message: 'An account with this email already exists' });
-    }
     console.error('Registration error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server error during registration' });
+    return res.status(500).json({
+      success: false,
+      message: 'Server error during registration',
+    });
   }
 };
 
+/**
+ * POST /api/auth/login
+ * Authenticate user with email and password, returning JWT token.
+ *
+ * Request body: { email, password }
+ * Success response (200): { success, message, data: { token, user } }
+ * Unauthorized response (401): invalid credentials
+ * Error response (500): server error
+ */
 export const login = async (req, res) => {
   try {
-    const email = String(req.body.email || '').trim().toLowerCase();
-    const password = String(req.body.password || '');
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
     }
-    if (!process.env.JWT_SECRET) {
-      return res.status(500).json({ success: false, message: 'Authentication is not configured' });
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
     }
-    const user = await User.findOne({ email }).select('+password');
-    if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-    const token = jwt.sign({ sub: user._id.toString(), role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'fallback_jwt_secret',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token,
+        user,
+      },
     });
-    return res.json({ success: true, message: 'Login successful', data: { token, user: user.toJSON() } });
   } catch (error) {
     console.error('Login error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server error during login' });
+    return res.status(500).json({
+      success: false,
+      message: 'Server error during login',
+    });
   }
 };
