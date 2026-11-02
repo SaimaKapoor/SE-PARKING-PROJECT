@@ -101,3 +101,49 @@ export const createVehicle = async (vehicleData) => {
     body: JSON.stringify(vehicleData),
   });
 };
+
+// Slot API Calls (B-014, B-016)
+export const fetchSlots = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.status) query.append('status', params.status);
+  if (params.type) query.append('type', params.type);
+  if (params.floor !== undefined && params.floor !== '') query.append('floor', params.floor);
+
+  const queryString = query.toString();
+  return apiFetch(`/api/slots${queryString ? `?${queryString}` : ''}`, {
+    method: 'GET',
+  });
+};
+
+export const fetchSlotById = async (id) => {
+  return apiFetch(`/api/slots/${id}`, {
+    method: 'GET',
+  });
+};
+
+export const updateSlotStatus = async (id, status) => {
+  return apiFetch(`/api/slots/${id}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
+  });
+};
+
+// Reservation API Calls (B-018)
+export const fetchReservations = async () => {
+  return apiFetch('/api/reservations', {
+    method: 'GET',
+  });
+};
+
+export const createReservation = async (reservationData) => {
+  return apiFetch('/api/reservations', {
+    method: 'POST',
+    body: JSON.stringify(reservationData),
+  });
+};
+
+export const cancelReservation = async (id) => {
+  return apiFetch(`/api/reservations/${id}/cancel`, {
+    method: 'PUT',
+  });
+};
