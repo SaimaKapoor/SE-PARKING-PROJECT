@@ -25,8 +25,9 @@ app.get('/api/health', (req, res) => {
 
   res.status(isDbConnected ? 200 : 503).json({
     status: isDbConnected ? 'UP' : 'DOWN',
-    backend: 'connected',
+    backend: 'UP',
     database: isDbConnected ? 'connected' : 'disconnected',
+    readiness: isDbConnected ? 'ready' : 'not_ready',
     timestamp: new Date().toISOString(),
   });
 });
