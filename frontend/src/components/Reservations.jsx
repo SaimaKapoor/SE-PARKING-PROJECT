@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchReservations, cancelReservation } from '../services/api';
 
 export default function Reservations({ onNavigateToGrid }) {
@@ -8,7 +8,7 @@ export default function Reservations({ onNavigateToGrid }) {
   const [success, setSuccess] = useState('');
   const [cancellingId, setCancellingId] = useState(null);
 
-  const loadReservations = useCallback(async () => {
+  const loadReservations = async () => {
     setLoading(true);
     setError('');
     try {
@@ -19,11 +19,32 @@ export default function Reservations({ onNavigateToGrid }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    loadReservations();
-  }, [loadReservations]);
+    let ignore = false;
+
+    async function fetchReservationData() {
+      try {
+        const response = await fetchReservations();
+        if (!ignore) {
+          setReservations(response.data?.reservations || response.reservations || []);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(err.message || 'Failed to load reservations');
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchReservationData();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const handleCancel = async (id) => {
     if (!window.confirm('Are you sure you want to cancel this reservation? The slot will be released.')) {

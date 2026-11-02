@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchSlots } from '../services/api';
 
 export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
@@ -10,7 +10,7 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
   const [statusFilter, setStatusFilter] = useState('');
   const [hoveredSlot, setHoveredSlot] = useState(null);
 
-  const loadSlots = useCallback(async () => {
+  const loadSlots = async () => {
     setLoading(true);
     setError('');
     try {
@@ -25,11 +25,36 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
     } finally {
       setLoading(false);
     }
-  }, [floorFilter, typeFilter, statusFilter]);
+  };
 
   useEffect(() => {
-    loadSlots();
-  }, [loadSlots]);
+    let ignore = false;
+
+    async function fetchSlotData() {
+      try {
+        const response = await fetchSlots({
+          floor: floorFilter,
+          type: typeFilter,
+          status: statusFilter,
+        });
+        if (!ignore) {
+          setSlots(response.data?.slots || response.slots || []);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(err.message || 'Failed to load parking slots');
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchSlotData();
+
+    return () => {
+      ignore = true;
+    };
+  }, [floorFilter, typeFilter, statusFilter]);
 
   // Compute summary stats across all loaded slots
   const totalCount = slots.length;
