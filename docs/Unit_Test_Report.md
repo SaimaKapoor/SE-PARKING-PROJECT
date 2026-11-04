@@ -7,7 +7,7 @@
 **Group Number**: 10  
 **Test Framework**: Jest (v29) with Supertest & MongoDB In-Memory Server  
 **Execution Environment**: Node.js v20.x, Windows / Ubuntu (CI)  
-**Date of Execution**: November 2026  
+**Date of Execution**: November 2026 (Updated post PRs #67, #68, #69, #70)  
 
 ---
 
@@ -15,11 +15,11 @@
 
 | Metric | Result |
 | :--- | :--- |
-| **Total Test Suites** | 5 passed, 5 total (100%) |
-| **Total Tests** | 57 passed, 57 total (100%) |
+| **Total Test Suites** | 11 passed, 11 total (100%) |
+| **Total Tests** | 92 passed, 92 total (100%) |
 | **Failed Tests** | 0 |
 | **Skipped Tests** | 0 |
-| **Execution Duration** | 14.97 seconds (in-band run) |
+| **Execution Duration** | 22.06 seconds (in-band run) |
 | **Pass Rate** | **100%** |
 
 ---
@@ -132,11 +132,103 @@
 
 ---
 
+### Suite 6: Parking Slot Service (`backend/tests/slot.test.js`)
+**Scope**: Slot queries, filtering by floor/type/status, slot status transitions (`AVAILABLE` $\leftrightarrow$ `RESERVED` $\leftrightarrow$ `OCCUPIED`), and UT-02/UT-03.  
+**Result**: 11 passed, 0 failed.
+
+| # | Test Name | Target Route | Assertion Verified | Status |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | Fetch all parking slots | `GET /api/slots` | Returns HTTP 200 with list of slots | Passed |
+| 2 | Filter slots by status (AVAILABLE) | `GET /api/slots?status=AVAILABLE` | Returns only available slots (UT-03) | Passed |
+| 3 | Filter slots by floor level | `GET /api/slots?floor=1` | Returns slots on floor 1 | Passed |
+| 4 | Filter slots by vehicle type | `GET /api/slots?type=4-wheeler` | Returns only 4-wheeler slots | Passed |
+| 5 | Retrieve single slot by ID | `GET /api/slots/:id` | Returns single slot details | Passed |
+| 6 | Retrieve single slot by slot number | `GET /api/slots/S01` | Returns slot details matching slotNumber | Passed |
+| 7 | Update slot status to RESERVED | `PUT /api/slots/:id/status` | Status successfully updated to `RESERVED` | Passed |
+| 8 | Update slot status to OCCUPIED | `PUT /api/slots/:id/status` | Status successfully updated to `OCCUPIED` | Passed |
+| 9 | Free slot back to AVAILABLE | `PUT /api/slots/:id/status` | Status reverts to `AVAILABLE`; cleans references | Passed |
+| 10 | Reject invalid status transition | `PUT /api/slots/:id/status` | Returns HTTP 400 Bad Request on invalid status enum | Passed |
+| 11 | Handle non-existent slot lookup | `GET /api/slots/INVALID-SLOT` | Returns HTTP 404 Not Found | Passed |
+
+---
+
+### Suite 7: Parking Reservation Service (`backend/tests/reservation.test.js`)
+**Scope**: Creating reservations, occupied slot conflict rejection, customer cancellation, and admin lookup (UT-02, UT-05, FR-003).  
+**Result**: 12 passed, 0 failed.
+
+| # | Test Name | Target Route | Assertion Verified | Status |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | Create reservation for available slot | `POST /api/reservations` | Returns HTTP 201; slot becomes `RESERVED` (UT-05) | Passed |
+| 2 | Reject reservation on occupied slot | `POST /api/reservations` | Returns HTTP 409 Conflict; slot already taken (UT-02) | Passed |
+| 3 | Reject reservation on already reserved slot | `POST /api/reservations` | Returns HTTP 409 Conflict | Passed |
+| 4 | Fetch caller reservations | `GET /api/reservations` | Returns only caller's reservations | Passed |
+| 5 | Customer cancels active reservation | `PUT /api/reservations/:id/cancel` | Reservation `CANCELLED`; slot freed to `AVAILABLE` | Passed |
+| 6 | Prevent customer from cancelling another user's reservation | `PUT /api/reservations/:id/cancel` | Returns HTTP 403 Forbidden | Passed |
+| 7 | Allow admin to cancel any reservation | `PUT /api/reservations/:id/cancel` | Admin token cancels successfully | Passed |
+| 8 | Reject reservation creation without vehicleId | `POST /api/reservations` | Returns HTTP 400 Bad Request | Passed |
+| 9 | Unique reservation ID generation (RES-...) | `POST /api/reservations` | `reservationId` format matches `^RES-[0-9A-Z]+$` | Passed |
+| 10 | Retrieve single reservation details | `GET /api/reservations/:id` | Returns populated slot and user references | Passed |
+| 11 | Prevent customer from viewing another user's reservation | `GET /api/reservations/:id` | Returns HTTP 403 Forbidden | Passed |
+| 12 | Staff retrieves all facility reservations | `GET /api/reservations` | Staff role receives complete facility reservations | Passed |
+
+---
+
+### Suite 8: QR Token Lifecycle & Uniqueness (`backend/tests/qrToken.test.js`)
+**Scope**: Unique UUID token generation, 15-minute expiration, and database uniqueness constraint (NFR-004, B-047).  
+**Result**: 3 passed, 0 failed.
+
+| # | Test Name | Assertion Verified | Status |
+| :- | :--- | :--- | :--- |
+| 1 | Distinct UUID token and future expiry for each session | Generates unique 36-char UUID; `expiresAt > Date.now()` | Passed |
+| 2 | Expired tokens treated as invalid | `hasValidQrToken()` returns `false`; lookup returns `null` | Passed |
+| 3 | Rejection of duplicate tokens at database level | Throws MongoDB duplicate key error (`E11000`) | Passed |
+
+---
+
+### Suite 9: Security Event Audit Logging (`backend/tests/securityEvent.test.js`)
+**Scope**: Persistent audit logging for failed login attempts, unauthorized access, and RBAC denials (SEC-006, B-043).  
+**Result**: 6 passed, 0 failed.
+
+| # | Test Name | Assertion Verified | Status |
+| :- | :--- | :--- | :--- |
+| 1 | Log failed login attempt with wrong password | Records `FAILED_LOGIN` event with IP and caller email | Passed |
+| 2 | Log failed login attempt with unknown email | Records `FAILED_LOGIN` event; no password stored | Passed |
+| 3 | Log unauthorized access attempt with missing token | Records `UNAUTHORIZED_ACCESS` event on protected route | Passed |
+| 4 | Log unauthorized access attempt with expired token | Records `UNAUTHORIZED_ACCESS` with token expired flag | Passed |
+| 5 | Log forbidden access attempt on role mismatch | Records `FORBIDDEN_ACCESS` when customer accesses admin route | Passed |
+| 6 | Log unauthorized reservation cancellation attempt | Records `UNAUTHORIZED_ACCESS` when user attempts cross-tenant delete | Passed |
+
+---
+
+### Suite 10: Database Connection Resiliency (`backend/tests/dbConnection.test.js`)
+**Scope**: Bounded retry with exponential backoff on MongoDB connection (NFR-002, B-045).  
+**Result**: 3 passed, 0 failed.
+
+| # | Test Name | Assertion Verified | Status |
+| :- | :--- | :--- | :--- |
+| 1 | Successfully connect on first attempt | Connects cleanly without retries | Passed |
+| 2 | Retry and recover after transient connection failures | Retries with backoff and succeeds on attempt 3 | Passed |
+| 3 | Throw error after exceeding maximum connection attempts | Fails cleanly after 5 attempts and logs error | Passed |
+
+---
+
+### Suite 11: Health Probe & Readiness (`backend/tests/health.test.js`)
+**Scope**: Service liveness and database readiness probe (`GET /api/health`).  
+**Result**: 3 passed, 0 failed.
+
+| # | Test Name | Assertion Verified | Status |
+| :- | :--- | :--- | :--- |
+| 1 | Return 200 OK when backend and database are healthy | Returns `status: 'UP'`, `backend: 'connected'`, `database: 'connected'` | Passed |
+| 2 | Return 503 Service Unavailable when database disconnects | Returns HTTP 503 with `status: 'DOWN'`, `database: 'disconnected'` | Passed |
+| 3 | Response includes ISO timestamp | Response payload contains valid ISO date string | Passed |
+
+---
+
 ## 3. Test Execution Command
 
-To reproduce this unit test execution locally or in CI:
+To execute all 11 test suites locally or in CI:
 ```bash
 cd backend
 npm test
 ```
-Outputs in-band Jest execution logs with zero configuration dependencies.
+All 11 suites execute in-band against isolated in-memory MongoDB databases with 100% test pass rate.
