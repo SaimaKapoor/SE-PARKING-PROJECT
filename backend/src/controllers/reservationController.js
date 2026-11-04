@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import Reservation from '../models/Reservation.js';
 import ParkingSlot from '../models/ParkingSlot.js';
+import { recordSecurityEvent } from '../services/securityEventLogger.js';
 
 /**
  * Helper to generate a unique human-friendly reservation code: RES-XXXXXX
@@ -156,6 +157,11 @@ export async function getReservationById(req, res) {
     const isOwner = reservation.userId.toString() === req.user._id.toString();
     const isStaff = ['admin', 'staff'].includes(req.user.role);
     if (!isOwner && !isStaff) {
+      await recordSecurityEvent(req, {
+        eventType: 'UNAUTHORIZED_ACCESS',
+        userId: req.user._id,
+        reason: 'reservation_access_denied',
+      });
       return res.status(403).json({
         success: false,
         message: 'Forbidden: You cannot access this reservation',
@@ -200,6 +206,11 @@ export async function cancelReservation(req, res) {
     const isOwner = reservation.userId.toString() === req.user._id.toString();
     const isStaff = ['admin', 'staff'].includes(req.user.role);
     if (!isOwner && !isStaff) {
+      await recordSecurityEvent(req, {
+        eventType: 'UNAUTHORIZED_ACCESS',
+        userId: req.user._id,
+        reason: 'reservation_cancel_denied',
+      });
       return res.status(403).json({
         success: false,
         message: 'Forbidden: You cannot cancel this reservation',
