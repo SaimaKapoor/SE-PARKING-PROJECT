@@ -4,21 +4,37 @@ export default function Navbar({ user, activeTab, onSelectTab, onLogout }) {
       <div className="navbar-container">
         <div
           className="navbar-brand"
-          onClick={() => onSelectTab(user ? 'vehicles' : 'login')}
+          onClick={() => onSelectTab(user ? 'slots' : 'slots')}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
-              onSelectTab(user ? 'vehicles' : 'login');
+              onSelectTab('slots');
             }
           }}
         >
+          <span className="navbar-logo">🅿️</span>
           <span className="navbar-title">Smart Parking System</span>
         </div>
 
         <nav className="navbar-menu">
+          <button
+            type="button"
+            className={`nav-link ${activeTab === 'slots' ? 'active' : ''}`}
+            onClick={() => onSelectTab('slots')}
+          >
+            Parking Slots
+          </button>
+
           {user ? (
             <>
+              <button
+                type="button"
+                className={`nav-link ${activeTab === 'reservations' ? 'active' : ''}`}
+                onClick={() => onSelectTab('reservations')}
+              >
+                My Reservations
+              </button>
               <button
                 type="button"
                 className={`nav-link ${activeTab === 'vehicles' ? 'active' : ''}`}
