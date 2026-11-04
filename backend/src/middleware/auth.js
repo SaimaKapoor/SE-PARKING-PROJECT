@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { recordSecurityEvent } from '../services/securityEventLogger.js';
 
 /**
  * Middleware to authenticate requests via JWT Bearer token.
@@ -20,6 +21,10 @@ export const protect = async (req, res, next) => {
     }
 
     if (!token) {
+      await recordSecurityEvent(req, {
+        eventType: 'UNAUTHORIZED_ACCESS',
+        reason: 'missing_token',
+      });
       return res.status(401).json({
         success: false,
         message: 'Authentication token required',
@@ -31,6 +36,10 @@ export const protect = async (req, res, next) => {
     try {
       decoded = jwt.verify(token, secret);
     } catch (err) {
+      await recordSecurityEvent(req, {
+        eventType: 'UNAUTHORIZED_ACCESS',
+        reason: err.name === 'TokenExpiredError' ? 'expired_token' : 'invalid_token',
+      });
       return res.status(401).json({
         success: false,
         message:
@@ -43,6 +52,11 @@ export const protect = async (req, res, next) => {
     const userId = decoded.id || decoded.sub;
     const user = await User.findById(userId).select('-password');
     if (!user) {
+      await recordSecurityEvent(req, {
+        eventType: 'UNAUTHORIZED_ACCESS',
+        userId,
+        reason: 'user_not_found',
+      });
       return res.status(401).json({
         success: false,
         message: 'User belonging to token no longer exists',
@@ -67,8 +81,13 @@ export const protect = async (req, res, next) => {
  * Requirements: SEC-002, B-009, B-039
  */
 export const authorize = (...roles) => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
+      await recordSecurityEvent(req, {
+        eventType: 'UNAUTHORIZED_ACCESS',
+        userId: req.user?._id,
+        reason: 'role_not_allowed',
+      });
       return res.status(403).json({
         success: false,
         message: 'Forbidden: Insufficient permissions for this resource',

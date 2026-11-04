@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { recordSecurityEvent } from '../services/securityEventLogger.js';
 
 /**
  * POST /api/auth/register
@@ -61,6 +62,10 @@ export const login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
+      await recordSecurityEvent(req, {
+        eventType: 'LOGIN_FAILED',
+        reason: 'user_not_found',
+      });
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
@@ -69,6 +74,11 @@ export const login = async (req, res) => {
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      await recordSecurityEvent(req, {
+        eventType: 'LOGIN_FAILED',
+        userId: user._id,
+        reason: 'invalid_password',
+      });
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
