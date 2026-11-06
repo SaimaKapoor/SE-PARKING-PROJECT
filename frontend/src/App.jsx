@@ -6,13 +6,17 @@ import Vehicles from './components/Vehicles';
 import SlotGrid from './components/SlotGrid';
 import ReservationModal from './components/ReservationModal';
 import Reservations from './components/Reservations';
+import AdminDashboard from './components/AdminDashboard';
+import AdminSlotManagement from './components/AdminSlotManagement';
 import { getUser, clearAuth, getProfile } from './services/api';
 import './App.css';
 
 export default function App() {
   const [user, setUser] = useState(() => getUser());
+  const [profileChecked, setProfileChecked] = useState(() => !getUser());
   const [activeTab, setActiveTab] = useState('slots');
   const [selectedSlotForReservation, setSelectedSlotForReservation] = useState(null);
+  const isAdmin = profileChecked && user?.role === 'admin';
 
   useEffect(() => {
     // Validate session on mount if token exists
@@ -20,12 +24,17 @@ export default function App() {
       try {
         const response = await getProfile();
         if (response.data?.user) {
-          setUser(response.data.user);
+          const verifiedUser = response.data.user;
+          setUser(verifiedUser);
+          if (verifiedUser.role === 'admin') setActiveTab('admin');
         }
+        setProfileChecked(true);
       } catch {
         // Token expired or invalid
         clearAuth();
         setUser(null);
+        setActiveTab('slots');
+        setProfileChecked(true);
       }
     };
 
@@ -36,13 +45,20 @@ export default function App() {
 
   const handleLoginSuccess = (loggedInUser) => {
     setUser(loggedInUser);
-    setActiveTab('slots');
+    setProfileChecked(true);
+    setActiveTab(loggedInUser.role === 'admin' ? 'admin' : 'slots');
   };
 
   const handleLogout = () => {
     clearAuth();
     setUser(null);
+    setProfileChecked(true);
     setActiveTab('slots');
+  };
+
+  const handleSelectTab = (tab) => {
+    if (tab === 'admin' && !isAdmin) return;
+    setActiveTab(tab);
   };
 
   const handleSelectSlot = (slot) => {
@@ -61,8 +77,9 @@ export default function App() {
     <div className="app-layout">
       <Navbar
         user={user}
+        isAdmin={isAdmin}
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleSelectTab}
         onLogout={handleLogout}
       />
 
@@ -96,6 +113,13 @@ export default function App() {
 
         {user && activeTab === 'vehicles' && (
           <Vehicles user={user} />
+        )}
+
+        {isAdmin && activeTab === 'admin' && (
+          <AdminDashboard onManageSlots={() => setActiveTab('adminSlots')} />
+        )}
+        {isAdmin && activeTab === 'adminSlots' && (
+          <AdminSlotManagement onBackToDashboard={() => setActiveTab('admin')} />
         )}
       </main>
 
