@@ -115,6 +115,52 @@ export const fetchSlots = async (params = {}) => {
   });
 };
 
+export const fetchAdminTransactions = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.status) query.append('status', params.status);
+  if (params.userId) query.append('userId', params.userId);
+  if (params.sessionId) query.append('sessionId', params.sessionId);
+  if (params.from) query.append('from', params.from);
+  if (params.to) query.append('to', params.to);
+  if (params.page) query.append('page', params.page);
+  if (params.limit) query.append('limit', params.limit);
+
+  const queryString = query.toString();
+  return apiFetch(`/api/admin/transactions${queryString ? `?${queryString}` : ''}`, {
+    method: 'GET',
+  });
+};
+
+// Admin Slot Management API (B-032)
+export const fetchAdminSlots = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.status) query.append('status', params.status);
+  if (params.type) query.append('type', params.type);
+  if (params.floor !== undefined && params.floor !== '') query.append('floor', params.floor);
+  const queryString = query.toString();
+
+  return apiFetch(`/api/admin/slots${queryString ? `?${queryString}` : ''}`, { method: 'GET' });
+};
+
+export const createAdminSlot = async (slotData) => apiFetch('/api/admin/slots', {
+  method: 'POST',
+  body: JSON.stringify(slotData),
+});
+
+export const updateAdminSlot = async (id, slotData) => apiFetch(`/api/admin/slots/${id}`, {
+  method: 'PUT',
+  body: JSON.stringify(slotData),
+});
+
+export const updateAdminSlotRate = async (id, hourlyRate) => apiFetch(`/api/admin/slots/${id}/rate`, {
+  method: 'PUT',
+  body: JSON.stringify({ hourlyRate }),
+});
+
+export const deleteAdminSlot = async (id) => apiFetch(`/api/admin/slots/${id}`, {
+  method: 'DELETE',
+});
+
 export const fetchSlotById = async (id) => {
   return apiFetch(`/api/slots/${id}`, {
     method: 'GET',

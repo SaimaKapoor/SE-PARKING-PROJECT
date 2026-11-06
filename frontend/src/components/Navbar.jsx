@@ -1,4 +1,4 @@
-export default function Navbar({ user, activeTab, onSelectTab, onLogout }) {
+export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout }) {
   return (
     <header className="navbar">
       <div className="navbar-container">
@@ -28,6 +28,15 @@ export default function Navbar({ user, activeTab, onSelectTab, onLogout }) {
 
           {user ? (
             <>
+              {isAdmin && (
+                <button
+                  type="button"
+                  className={`nav-link ${['admin', 'adminSlots'].includes(activeTab) ? 'active' : ''}`}
+                  onClick={() => onSelectTab('admin')}
+                >
+                  Admin Dashboard
+                </button>
+              )}
               <button
                 type="button"
                 className={`nav-link ${activeTab === 'reservations' ? 'active' : ''}`}
