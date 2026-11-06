@@ -99,7 +99,8 @@ sequenceDiagram
 | **SEC-003** | Input Sanitization | `express-validator` middleware rules | Negative testing with malformed emails, SQL/NoSQL tokens, and invalid types | **Passed** |
 | **SEC-004** | Token Expiry | JWT signed with `JWT_EXPIRES_IN` | Injected expired JWT token into protected route; intercepted with HTTP 401 | **Passed** |
 | **SEC-005** | Sensitive Payment Data | Zero PCI data stored | Database schema validation confirming only transaction reference and amount saved | **Passed** |
-| **SEC-006** | Audit Integrity | ISO timestamps on all state transitions | Timestamp consistency check on entry, exit, payment, and completion | **Passed** |
+| **SEC-006** | Security Event Logging | Persistent collection `security_events` | Automated test verifying failed logins and RBAC denials logged without passwords | **Passed** |
+| **SEC-007** | QR Token Security | Cryptographic UUIDs & 15m expiration | Unique index validation & expiration boundary checks in `qrToken.test.js` | **Passed** |
 
 ---
 
@@ -107,11 +108,15 @@ sequenceDiagram
 
 ### NFR-001: Performance & Response Time
 - **Criterion**: Key endpoints respond within 2 seconds under normal test load.
-- **Result**: Automated integration test suites executing across all 5 test suites completed in **14.97 seconds** total (average response time under **80ms** per REST API call).
+- **Result**: Automated test execution across all 11 test suites (92 tests) completed in **28.39 seconds** total (average response time under **80ms** per REST API call).
 
 ### NFR-002: System Availability & Liveness
 - **Criterion**: System maintains operational uptime and reports health status.
-- **Result**: Containerized deployment includes a dedicated health probe (`GET /api/health`) that continuously validates Node.js server liveness and MongoDB replica connectivity.
+- **Result**: Verified via `health.test.js` and `dbConnection.test.js`. Health endpoint (`GET /health`) returns liveness status and connection state. Database layer implements exponential backoff retry logic (up to 5 attempts) to recover from transient disconnections.
+
+### NFR-004: QR Code Integrity & Expiration
+- **Criterion**: QR tokens must be globally unique and expire within 15 minutes of generation.
+- **Result**: Verified in `qrToken.test.js`. Each session generates a distinct cryptographic UUID with `validUntil` timestamp set to 15 minutes in the future; expired or duplicate tokens are rejected.
 
 ### NFR-006: Maintainability & Architectural Modularity
 - **Criterion**: Decoupled components capable of independent modification.

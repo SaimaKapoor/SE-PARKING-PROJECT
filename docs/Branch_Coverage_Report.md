@@ -17,12 +17,14 @@ Branch coverage measures whether every conditional decision point (`if / else`, 
 
 | Evaluation Metric | Measured Value | Standard Threshold | Status |
 | :--- | :--- | :--- | :--- |
-| **Overall Branch Coverage** | **69.46%** | >= 65% | **Exceeds Standard** |
-| **Middleware Branch Coverage** | **95.00%** | >= 80% | **Exemplary** |
+| **Overall Branch Coverage** | **75.70%** | >= 65% | **Exceeds Standard** |
+| **Middleware Branch Coverage** | **95.45%** | >= 80% | **Exemplary** |
 | **Auth Controller Branch Coverage** | **100.00%** | >= 80% | **Complete (100%)** |
 | **Validators Branch Coverage** | **100.00%** | >= 80% | **Complete (100%)** |
-| **Fee Calculation Service** | **88.23%** | >= 80% | **Exemplary** |
-| **Models Layer Branch Coverage** | **87.50%** | >= 75% | **Exemplary** |
+| **Security Event Logger Branch Coverage** | **90.90%** | >= 80% | **Exemplary** |
+| **Fee Calculation Service Branch Coverage** | **88.23%** | >= 80% | **Exemplary** |
+| **Slot Controller Branch Coverage** | **83.33%** | >= 75% | **Exemplary** |
+| **Models Layer Branch Coverage** | **82.75%** | >= 75% | **Exemplary** |
 
 ---
 

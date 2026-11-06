@@ -1,4 +1,4 @@
-# Test Case Document (Updated Post-Sprint 2)
+# Test Case Document (Updated Post-Sprint 3)
 
 **PES University, Bangalore**  
 **Department of Computer Science and Engineering**  
@@ -12,20 +12,25 @@
 - Rohan Jadar (PES1UG24CS379)
 
 **Date**: November 2026  
-**Document Version**: 2.0 (Updated from Deliverable 4 based on Sprint 1 & 2 implementation)
+**Document Version**: 3.0 (Updated from Deliverable 4 based on Sprint 1, 2, and 3 implementation)
 
 ---
 
 ## 1. Document Overview
 
-This document presents the updated test case suite for the Vehicle Parking System, superseding the preliminary test planning from Deliverable 4. During Sprint 1 and Sprint 2, the test cases were refined, expanded, and automated using Jest, Supertest, and MongoMemoryServer.
+This document presents the finalized, post-Sprint 3 test case suite for the Vehicle Parking System, superseding the preliminary test planning from Deliverable 4 and post-Sprint 2 documentation. Across Sprint 1, Sprint 2, and Sprint 3 (2nd Nov to 6th Nov 2026), all test cases were refined, expanded, and automated using Jest (v29), Supertest, and MongoMemoryServer, achieving **100% pass rate across all 11 test suites and 92 automated tests**.
 
 ### Summary of Sprints Updates:
-1. **UT-01 (Fee Calculation)**: Expanded from a single test scenario (2 hours @ ₹30/hr) into a comprehensive 7-scenario boundary test suite testing zero duration, sub-hour rounding, exact 60-minute thresholds, multi-hour durations, negative duration rejection, and invalid hourly rate checks.
-2. **UT-04 (User Input Validation)**: Expanded from a single missing vehicle registration check into an 18-scenario authentication suite validating name presence, email syntax normalization, password minimum length (6 characters), password hashing (bcrypt salt 10), and duplicate registration rejection (409 Conflict).
-3. **Vehicle Management Suite (UT-06, UT-07, UT-08)**: Added 18 automated unit and integration tests covering vehicle registration (`POST /api/vehicles`), duplicate license plate rejection, uppercase normalization, vehicle category enforcement (2-wheeler vs 4-wheeler), and per-customer vehicle query isolation (`GET /api/vehicles`).
-4. **JWT Security Suite (SEC-001 to SEC-004)**: Added 13 automated tests in `tests/authMiddleware.test.js` validating Bearer token extraction, invalid/forged signature rejection, token expiration (`TokenExpiredError`), account persistence checks, and role-based access control (RBAC) across customer, staff, and admin tiers.
-5. **Session & Payment Integration Flow (IT-03, IT-04, ST-01, ST-05)**: Automated full end-to-end flow in `tests/paymentFlow.test.js` integrating slot check-in, duration calculation, mock payment processing, session completion, slot release, and customer history retrieval.
+1. **UT-01 (Fee Calculation - 7 Tests)**: Comprehensive boundary test suite testing zero duration, sub-hour rounding, exact 60-minute thresholds, multi-hour durations, negative duration rejection, and invalid hourly rate checks (`backend/tests/feeCalculation.test.js`).
+2. **UT-04 (User Authentication & Input Validation - 24 Tests)**: Comprehensive authentication suite validating name presence, email syntax normalization, password minimum length (6 characters), bcrypt hashing (salt rounds = 10), case-insensitive logins, NoSQL injection resistance, and duplicate registration rejection (409 Conflict) (`backend/tests/auth.test.js`).
+3. **Vehicle Management Suite (UT-06, UT-07, UT-08 - 12 Tests)**: Automated unit and integration tests covering vehicle registration (`POST /api/vehicles`), duplicate license plate rejection, uppercase normalization, vehicle category enforcement (2-wheeler vs 4-wheeler), and per-customer vehicle query isolation (`backend/tests/vehicle.test.js`).
+4. **JWT Security & RBAC Suite (SEC-001 to SEC-004 - 13 Tests)**: Automated tests in `backend/tests/authMiddleware.test.js` validating Bearer token extraction, invalid/forged signature rejection, token expiration (`TokenExpiredError`), account persistence checks, and role-based access control (RBAC) across customer, staff, and admin tiers.
+5. **Parking Slots Management (UT-02, UT-03, UT-05 - 13 Tests)**: Added in Sprint 3 (`backend/tests/slot.test.js`), validating slot querying, filtering by status (`AVAILABLE`, `OCCUPIED`, `RESERVED`), type (`2-wheeler`, `4-wheeler`), floor, slot status updates, and boundary validations.
+6. **Slot Reservation Subsystem (10 Tests)**: Added in Sprint 3 (`backend/tests/reservation.test.js`), covering active reservation creation, vehicle fallback, reservation cancellation and slot freeing, and collision prevention on already occupied/reserved slots.
+7. **QR Code Security & Expiration (SEC-007 / NFR-004 - 3 Tests)**: Added in Sprint 3 (`backend/tests/qrToken.test.js`), verifying distinct UUID token generation, future expiration validation (15-minute validity window), rejection of expired tokens, and unique database constraint enforcement.
+8. **High Availability & Database Resilience (NFR-002 - 5 Tests)**: Added in Sprint 3 (`backend/tests/health.test.js`, `backend/tests/dbConnection.test.js`), testing `/health` liveness/readiness reporting, exponential backoff retries on transient connection failures, and bounded retry termination.
+9. **Persistent Security Event Logging (SEC-006 - 5 Tests)**: Added in Sprint 3 (`backend/tests/securityEvent.test.js`), verifying tamper-resistant audit logging in MongoDB for failed logins, unauthenticated requests, RBAC denials, and ownership violations without leaking sensitive credentials.
+10. **Session & Payment Integration Flow (IT-03, IT-04, ST-01, ST-05 - 1 Integration Suite)**: Automated full end-to-end flow in `backend/tests/paymentFlow.test.js` integrating slot check-in, duration calculation, mock payment processing, session completion, slot release, and customer history retrieval.
 
 ---
 
@@ -42,13 +47,17 @@ This document presents the updated test case suite for the Vehicle Parking Syste
 | **UT-01e** | Fee Calculation | Multi-hour duration rounding | Fee calculation service loaded | Call `calculateParkingFee(181, 25)` | `duration = 181 mins`, `rate = 25` | Rounds up to 4 hours (`100`) | Returns `100` | **Passed** |
 | **UT-01f** | Fee Calculation | Negative duration rejection | Fee calculation service loaded | Call `calculateParkingFee(-1, 30)` | `duration = -1`, `rate = 30` | Throws validation error | Throws error | **Passed** |
 | **UT-01g** | Fee Calculation | Negative rate rejection | Fee calculation service loaded | Call `calculateParkingFee(60, -1)` | `duration = 60`, `rate = -1` | Throws validation error | Throws error | **Passed** |
-| **UT-02** | Parking Slot | Reject reservation of occupied slot | Slot exists with status `OCCUPIED` | Attempt reservation on occupied slot | `slotId = 'A-01'`, status `OCCUPIED` | Reservation rejected; slot remains `OCCUPIED` | Rejected with error | **Passed** |
-| **UT-03** | Parking Slot | Check status of available slot | Slot exists with status `AVAILABLE` | Query slot availability | `slotId = 'A-01'` | Slot reports status `AVAILABLE` | Reports `AVAILABLE` | **Passed** |
+| **UT-02a** | Parking Slot | Reject reservation of occupied slot | Slot exists with status `OCCUPIED` | Attempt reservation on occupied slot | `slotId = 'A-01'`, status `OCCUPIED` | HTTP 409 Conflict; slot remains `OCCUPIED` | HTTP 409 Conflict returned | **Passed** |
+| **UT-02b** | Parking Slot | Reject reservation of reserved slot | Slot exists with status `RESERVED` | Attempt reservation on reserved slot | `slotId = 'A-01'`, status `RESERVED` | HTTP 409 Conflict | HTTP 409 Conflict returned | **Passed** |
+| **UT-03a** | Parking Slot | Query available slots | Slots exist in database | Query `GET /api/slots?status=AVAILABLE` | Filter: `status=AVAILABLE` | Returns only slots with status `AVAILABLE` | Returns matching slots | **Passed** |
+| **UT-03b** | Parking Slot | Filter slots by vehicle type & floor | Slots seeded across floors | Query `GET /api/slots?type=4-wheeler&floor=1` | Filter: `type=4-wheeler`, `floor=1` | Returns slots on Floor 1 for 4-wheelers | Returns matching slots | **Passed** |
 | **UT-04a** | User Auth | Valid registration with primary vehicle | Registration endpoint available | `POST /api/auth/register` with valid payload | Name: "John", Email: "john@test.com", Pass: "pass123", Phone: "9876543210", Vehicle: "KA01AB1234" | HTTP 201 Created; returns sanitized user object and JWT | HTTP 201 Created; JWT returned | **Passed** |
 | **UT-04b** | User Auth | Reject missing required fields | Registration endpoint available | `POST /api/auth/register` with missing email/phone | `{ name: "John", password: "123" }` | HTTP 400 Bad Request; validation errors array returned | HTTP 400 Bad Request; validation errors returned | **Passed** |
 | **UT-04c** | User Auth | Reject invalid email syntax | Registration endpoint available | `POST /api/auth/register` with malformed email | `email = "not-an-email"` | HTTP 400 Bad Request; email validation message | HTTP 400 Bad Request; rejected | **Passed** |
 | **UT-04d** | User Auth | Reject duplicate user email | User already exists in database | `POST /api/auth/register` with existing email | `email = "payment@example.com"` | HTTP 409 Conflict; account already exists message | HTTP 409 Conflict; message returned | **Passed** |
-| **UT-05** | Parking Slot | Reserve available slot | Slot exists with status `AVAILABLE` | Request slot reservation | `slotId = 'A-01'` | Slot status changes from `AVAILABLE` to `OCCUPIED` | Status updated to `OCCUPIED` | **Passed** |
+| **UT-04e** | User Auth | Case-insensitive email authentication | User registered | `POST /api/auth/login` with mixed-case email | `email = "JOHN@Test.COM"` | HTTP 200 OK; JWT returned | HTTP 200 OK | **Passed** |
+| **UT-05a** | Parking Slot | Reserve available slot | Slot exists with status `AVAILABLE` | `POST /api/reservations` | `slotId = 'A-01'` | HTTP 201 Created; slot status becomes `RESERVED` | Status updated to `RESERVED` | **Passed** |
+| **UT-05b** | Parking Slot | Cancel active reservation | Reservation is active | `DELETE /api/reservations/:id` | Valid reservation ID | HTTP 200 OK; slot status reverts to `AVAILABLE` | Status updated to `AVAILABLE` | **Passed** |
 | **UT-06** | Vehicle Service | Register new vehicle | Customer authenticated with JWT | `POST /api/vehicles` with vehicle details | Vehicle: `KA05EF9999`, Type: `4-wheeler`, Model: `Hyundai i20` | HTTP 201 Created; vehicle stored and linked to user ID | HTTP 201 Created; vehicle created | **Passed** |
 | **UT-07** | Vehicle Service | Reject duplicate vehicle registration | Vehicle already registered in system | `POST /api/vehicles` with existing registration number | `vehicleNumber = 'KA05EF9999'` | HTTP 409 Conflict; duplicate registration rejected | HTTP 409 Conflict; duplicate rejected | **Passed** |
 | **UT-08** | Vehicle Service | Customer vehicle query isolation | Multiple users with registered vehicles | `GET /api/vehicles` with Customer A token | Customer A Bearer token | HTTP 200 OK; returns only Customer A vehicles (zero leakage of Customer B data) | HTTP 200 OK; strictly isolated | **Passed** |
@@ -59,10 +68,12 @@ This document presents the updated test case suite for the Vehicle Parking Syste
 
 | Test Case ID | Module / Service | Description | Precondition | Execution Steps | Test Data | Expected Result | Actual Result | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **IT-01** | QR & Reservation | Generate unique token for reservation | User authenticated; slot reserved | `POST /api/qr/generate` or session initiation | Valid reservation ID and vehicle ID | Unique signed QR payload generated with expiration timestamp | Token generated | **Passed** |
-| **IT-02** | QR & Entry Validation | Reject invalid or expired QR code | Entry gate scanning active | `POST /api/entry/validate` with malformed token | Malformed string `invalid-qr-token` | HTTP 401 Unauthorized; entry denied; no session created | HTTP 401; entry denied | **Passed** |
+| **IT-01** | QR & Reservation | Generate unique token for reservation | User authenticated; slot reserved | `POST /api/reservations` | Valid reservation ID and vehicle ID | Unique UUID QR payload generated with expiration timestamp | Token generated | **Passed** |
+| **IT-02** | QR Validation | Reject invalid or expired QR code | Entry gate scanning active | Verify token validity via `validUntil` threshold | Expired timestamp (`validUntil < now`) | Token flagged as invalid; access denied | Rejected | **Passed** |
 | **IT-03** | Payment & Session | Process mock payment for parking fee | Session exists with calculated exit fee | `POST /api/payments` with session ID and amount | `sessionId = '...'`, `outcome = 'success'` | HTTP 201 Created; payment status recorded as `SUCCESS`; card numbers never stored | HTTP 201 Created; status `SUCCESS` | **Passed** |
 | **IT-04** | Parking Session | Record vehicle entry and occupy slot | Valid user and available slot | `POST /api/sessions/entry` | `slotId = 'A-01'` | HTTP 201 Created; active session created; slot status set to `OCCUPIED` | HTTP 201 Created; slot occupied | **Passed** |
+| **IT-05** | Health & Readiness | Backend reports service liveness | Express server running | `GET /health` | Unauthenticated GET request | HTTP 200 OK with `status: ok` and database connection status | HTTP 200 OK; uptime returned | **Passed** |
+| **IT-06** | DB Resiliency | Retry initial database connection | MongoDB temporarily offline | Invoke `connectDB()` with transient failures | 2 simulated transient network drops | Retries with exponential backoff; connects successfully on recovery | Connects after 2 retries | **Passed** |
 
 ---
 
@@ -77,6 +88,9 @@ This document presents the updated test case suite for the Vehicle Parking Syste
 | **SEC-002** | Security | Enforce role-based access control | Server running with RBAC middleware | Send requests across customer, staff, and admin routes | Customer, Staff, Admin tokens | Role restrictions strictly enforced; unauthorized roles return 403 Forbidden | Verified across 13 RBAC test cases | **Passed** |
 | **SEC-003** | Security | Input validation and sanitization | Server running | Submit malformed inputs, SQL/NoSQL injection tokens, invalid email formats | Special characters and malformed emails | express-validator rejects input with 400 Bad Request; sanitizes valid strings | 400 Bad Request returned | **Passed** |
 | **SEC-004** | Security | Rejection of expired JWT tokens | Expired JWT token | Request protected endpoint (`/api/auth/me`) with expired token | Token signed with `expiresIn: '0s'` | HTTP 401 Unauthorized; "Token has expired" error response | HTTP 401 Unauthorized; message verified | **Passed** |
+| **SEC-005** | Security | Sensitive payment data protection | Payment processing | Submit payment transaction | Payment mock payload | Database schema validation confirming only transaction reference and amount saved; zero card details | Verified in `paymentFlow.test.js` | **Passed** |
+| **SEC-006** | Security | Persistent security event logging | Invalid login or unauthorized request occurs | Send invalid login / forbidden request; inspect `security_events` collection | Invalid credentials / forbidden role access | Event persisted with event type, severity, IP address, and timestamp without sensitive credentials | Verified across 5 tests in `securityEvent.test.js` | **Passed** |
+| **SEC-007** | Security / NFR-004 | Unique expiring QR tokens | QR token generated for session | Generate multiple QR tokens and check uniqueness & expiration | Multiple reservation requests | Distinct UUIDs generated; `validUntil` set to exactly 15 minutes; expired tokens rejected | Verified across 3 tests in `qrToken.test.js` | **Passed** |
 
 ---
 
@@ -93,24 +107,32 @@ This document presents the updated test case suite for the Vehicle Parking Syste
 | **Parking Duration** | `60` mins, `120` mins | `-1` mins, non-numeric | Positive integer; throws error on negative |
 | **Parking Rate** | `30.00`, `50.00` | `-1.00`, non-numeric | Positive float; throws error on negative |
 | **Payment Outcome** | `"success"` | `"failure"`, `"timeout"` | Sets payment status `SUCCESS` or `FAILED` |
+| **Slot Status** | `"AVAILABLE"`, `"RESERVED"`, `"OCCUPIED"` | `"MAINTENANCE"`, `""` | Validated enum values; rejects unknown statuses |
+| **QR Expiry** | Date in future (`+15 mins`) | Date in past (`-1 min`) | Active token accepted; past token rejected |
 
 ---
 
-## 4. Requirements Traceability Matrix (Post-Sprint 2)
+## 4. Requirements Traceability Matrix (Post-Sprint 3)
 
 | Requirement ID | Specification Description | Source Code Location | Automated Test Suite | Test Execution Result |
 | :--- | :--- | :--- | :--- | :--- |
-| **FR-001** | User registration and login | `backend/src/controllers/authController.js` | `backend/tests/auth.test.js` | **Passed (18/18)** |
-| **FR-002** | View available parking slots | `backend/src/models/ParkingSlot.js` | `backend/tests/paymentFlow.test.js` | **Passed** |
+| **FR-001** | User registration and login | `backend/src/controllers/authController.js` | `backend/tests/auth.test.js` | **Passed (24/24)** |
+| **FR-002** | View available parking slots | `backend/src/models/ParkingSlot.js` | `backend/tests/slot.test.js`<br>`backend/tests/paymentFlow.test.js` | **Passed (14/14)** |
+| **FR-003** | Slot reservation creation | `backend/src/controllers/reservationController.js` | `backend/tests/reservation.test.js` | **Passed (10/10)** |
+| **FR-004** | Slot reservation cancellation | `backend/src/controllers/reservationController.js` | `backend/tests/reservation.test.js` | **Passed** |
 | **FR-006** | Slot occupancy on entry | `backend/src/controllers/sessionController.js` | `backend/tests/paymentFlow.test.js` | **Passed** |
 | **FR-007** | Record vehicle entry timestamp | `backend/src/controllers/sessionController.js` | `backend/tests/paymentFlow.test.js` | **Passed** |
 | **FR-009** | Dynamic fee calculation | `backend/src/services/feeCalculation.js` | `backend/tests/feeCalculation.test.js` | **Passed (7/7)** |
 | **FR-010** | Mock payment processing | `backend/src/controllers/paymentController.js` | `backend/tests/paymentFlow.test.js` | **Passed** |
 | **FR-011** | Complete session and free slot | `backend/src/controllers/sessionController.js` | `backend/tests/paymentFlow.test.js` | **Passed** |
 | **FR-013** | Customer parking history | `backend/src/controllers/sessionController.js` | `backend/tests/paymentFlow.test.js` | **Passed** |
-| **SEC-001** | bcrypt password hashing | `backend/src/models/User.js` | `backend/tests/auth.test.js` | **Passed** |
+| **SEC-001** | bcrypt password hashing (salt 10) | `backend/src/models/User.js` | `backend/tests/auth.test.js` | **Passed** |
 | **SEC-002** | Role-based access control (RBAC) | `backend/src/middleware/auth.js` | `backend/tests/authMiddleware.test.js` | **Passed (13/13)** |
 | **SEC-003** | Input validation & sanitization | `backend/src/middleware/validators.js` | `backend/tests/auth.test.js`<br>`backend/tests/vehicle.test.js` | **Passed** |
 | **SEC-004** | Token expiration enforcement | `backend/src/middleware/auth.js` | `backend/tests/authMiddleware.test.js` | **Passed** |
 | **SEC-005** | Sensitive payment data protection | `backend/src/models/Payment.js` | `backend/tests/paymentFlow.test.js` | **Passed** |
-| **B-010/B-011** | Vehicle registration & retrieval | `backend/src/controllers/vehicleController.js` | `backend/tests/vehicle.test.js` | **Passed (18/18)** |
+| **SEC-006** | Persistent security event logging | `backend/src/services/securityEventLogger.js` | `backend/tests/securityEvent.test.js` | **Passed (5/5)** |
+| **NFR-002** | Backend availability & connection retry | `backend/src/config/db.js`<br>`backend/src/app.js` | `backend/tests/health.test.js`<br>`backend/tests/dbConnection.test.js` | **Passed (5/5)** |
+| **NFR-004** | QR token uniqueness & 15m expiration | `backend/src/models/ParkingSession.js` | `backend/tests/qrToken.test.js` | **Passed (3/3)** |
+| **B-010/B-011** | Vehicle registration & retrieval | `backend/src/controllers/vehicleController.js` | `backend/tests/vehicle.test.js` | **Passed (12/12)** |
+| **Overall** | **11 Test Suites Automated** | **All Backend Modules** | **Jest Test Engine** | **92/92 Passed (100%)** |
