@@ -1,4 +1,4 @@
-export default function Navbar({ user, activeTab, onSelectTab, onLogout }) {
+export default function Navbar({ user, activeTab, onSelectTab, onLogout, isStaff = false }) {
   return (
     <header className="navbar">
       <div className="navbar-container">
@@ -28,6 +28,7 @@ export default function Navbar({ user, activeTab, onSelectTab, onLogout }) {
 
           {user ? (
             <>
+              {isStaff && <button type="button" className={`nav-link ${activeTab === 'scanner' ? 'active' : ''}`} onClick={() => onSelectTab('scanner')}>QR Scanner</button>}
               <button
                 type="button"
                 className={`nav-link ${activeTab === 'reservations' ? 'active' : ''}`}

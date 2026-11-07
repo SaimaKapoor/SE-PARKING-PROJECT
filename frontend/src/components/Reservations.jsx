@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchReservations, cancelReservation } from '../services/api';
+import ReservationQrCard from './ReservationQrCard';
 
 export default function Reservations({ onNavigateToGrid }) {
   const [reservations, setReservations] = useState([]);
@@ -7,6 +8,7 @@ export default function Reservations({ onNavigateToGrid }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [cancellingId, setCancellingId] = useState(null);
+  const [qrReservationId, setQrReservationId] = useState(null);
 
   const loadReservations = async () => {
     setLoading(true);
@@ -151,7 +153,11 @@ export default function Reservations({ onNavigateToGrid }) {
                 </div>
 
                 {isConfirmed && (
+                  <>
                   <div className="res-card-footer">
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setQrReservationId(qrReservationId === res._id ? null : res._id)}>
+                      {qrReservationId === res._id ? 'Hide QR' : 'View QR'}
+                    </button>
                     <button
                       type="button"
                       className="btn btn-danger btn-sm"
@@ -163,6 +169,8 @@ export default function Reservations({ onNavigateToGrid }) {
                         : 'Cancel Reservation'}
                     </button>
                   </div>
+                  {qrReservationId === res._id && <ReservationQrCard reservation={res} />}
+                  </>
                 )}
               </div>
             );

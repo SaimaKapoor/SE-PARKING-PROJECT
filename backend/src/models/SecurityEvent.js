@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const securityEventSchema = new mongoose.Schema({
   eventType: {
     type: String,
-    enum: ['LOGIN_FAILED', 'UNAUTHORIZED_ACCESS'],
+    enum: ['LOGIN_FAILED', 'UNAUTHORIZED_ACCESS', 'QR_VALIDATION_FAILED'],
     required: true,
     index: true,
   },
