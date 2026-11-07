@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createReservation, fetchVehicles } from '../services/api';
+import ReservationQrCard from './ReservationQrCard';
 
 export default function ReservationModal({ slot, user, onClose, onReservationSuccess }) {
   const [vehicles, setVehicles] = useState([]);
@@ -113,35 +114,7 @@ export default function ReservationModal({ slot, user, onClose, onReservationSuc
               </div>
             </div>
 
-            {/* Simulated Digital QR Badge */}
-            <div className="qr-badge-container">
-              <div className="qr-box">
-                <svg viewBox="0 0 100 100" className="qr-svg" width="120" height="120">
-                  {/* Visual QR representation */}
-                  <rect x="5" y="5" width="30" height="30" fill="#1e293b" />
-                  <rect x="10" y="10" width="20" height="20" fill="#ffffff" />
-                  <rect x="15" y="15" width="10" height="10" fill="#1e293b" />
-
-                  <rect x="65" y="5" width="30" height="30" fill="#1e293b" />
-                  <rect x="70" y="10" width="20" height="20" fill="#ffffff" />
-                  <rect x="75" y="15" width="10" height="10" fill="#1e293b" />
-
-                  <rect x="5" y="65" width="30" height="30" fill="#1e293b" />
-                  <rect x="10" y="70" width="20" height="20" fill="#ffffff" />
-                  <rect x="15" y="75" width="10" height="10" fill="#1e293b" />
-
-                  <rect x="45" y="10" width="8" height="8" fill="#1e293b" />
-                  <rect x="45" y="25" width="8" height="15" fill="#1e293b" />
-                  <rect x="15" y="45" width="15" height="8" fill="#1e293b" />
-                  <rect x="40" y="45" width="20" height="20" fill="#1e293b" />
-                  <rect x="65" y="45" width="8" height="8" fill="#1e293b" />
-                  <rect x="80" y="45" width="10" height="20" fill="#1e293b" />
-                  <rect x="45" y="75" width="15" height="15" fill="#1e293b" />
-                  <rect x="70" y="75" width="20" height="8" fill="#1e293b" />
-                </svg>
-              </div>
-              <p className="qr-caption">Scan at entry barrier gate or present to attendant</p>
-            </div>
+            <ReservationQrCard reservation={confirmedReservation} autoGenerate />
 
             <div className="modal-actions">
               <button type="button" className="btn btn-primary btn-block" onClick={onClose}>

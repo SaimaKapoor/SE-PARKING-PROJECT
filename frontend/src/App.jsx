@@ -6,6 +6,7 @@ import Vehicles from './components/Vehicles';
 import SlotGrid from './components/SlotGrid';
 import ReservationModal from './components/ReservationModal';
 import Reservations from './components/Reservations';
+import StaffQrScanner from './components/StaffQrScanner';
 import { getUser, clearAuth, getProfile } from './services/api';
 import './App.css';
 
@@ -64,6 +65,7 @@ export default function App() {
         activeTab={activeTab}
         onSelectTab={setActiveTab}
         onLogout={handleLogout}
+        isStaff={user?.role === 'staff'}
       />
 
       <main className="main-content">
@@ -97,6 +99,8 @@ export default function App() {
         {user && activeTab === 'vehicles' && (
           <Vehicles user={user} />
         )}
+
+        {user?.role === 'staff' && activeTab === 'scanner' && <StaffQrScanner />}
       </main>
 
       {/* Reservation Dialog Modal */}
