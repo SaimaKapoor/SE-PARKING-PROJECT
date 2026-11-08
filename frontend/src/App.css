@@ -1055,3 +1055,293 @@ body {
 .btn-text:hover {
   color: var(--color-text-primary);
 }
+
+/* Admin Dashboard */
+.admin-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.admin-dashboard-header,
+.admin-dashboard-actions,
+.admin-section-heading,
+.admin-pagination,
+.admin-pagination > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-dashboard-header {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-dashboard-actions {
+  justify-content: flex-end;
+}
+
+.admin-eyebrow {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.admin-access-badge,
+.admin-record-count {
+  color: var(--color-text-secondary);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  white-space: nowrap;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-stat-card {
+  min-width: 0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid #111;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  box-shadow: var(--shadow-card);
+}
+
+.admin-stat-available { border-left-color: #16a34a; }
+.admin-stat-reserved { border-left-color: #ca8a04; }
+.admin-stat-occupied { border-left-color: #dc2626; }
+
+.admin-stat-label {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-stat-value {
+  display: block;
+  font-size: 1.7rem;
+  line-height: 1.25;
+  margin-top: 0.3rem;
+}
+
+.admin-transactions-section {
+  min-width: 0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+.admin-section-heading {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-section-heading h2 {
+  font-size: 1.1rem;
+  line-height: 1.35;
+}
+
+.admin-section-heading p {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  margin-top: 0.2rem;
+}
+
+.admin-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.85rem;
+  padding: 1rem 0;
+}
+
+.admin-filter-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 145px;
+}
+
+.admin-filter-control label {
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-filter-control .form-input,
+.admin-filter-control .form-select {
+  min-height: 40px;
+}
+
+.admin-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.admin-transactions-table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+.admin-transactions-table th {
+  background: #f7f7f7;
+  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-transactions-table th,
+.admin-transactions-table td {
+  padding: 0.75rem 0.8rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.admin-transactions-table tbody tr:last-child td { border-bottom: 0; }
+.admin-transactions-table tbody tr:hover { background: #fafafa; }
+
+.admin-transaction-ref,
+.admin-transaction-id,
+.admin-cell-primary,
+.admin-cell-secondary {
+  display: block;
+}
+
+.admin-transaction-ref,
+.admin-transaction-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere;
+}
+
+.admin-transaction-ref,
+.admin-cell-primary { font-weight: 700; }
+.admin-transaction-id,
+.admin-cell-secondary {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  margin-top: 0.18rem;
+}
+
+.admin-amount { font-weight: 700; white-space: nowrap; }
+
+.admin-payment-status {
+  display: inline-block;
+  border-radius: 9999px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  white-space: nowrap;
+}
+
+.admin-payment-success { color: #166534; background: #dcfce7; }
+.admin-payment-failed { color: #991b1b; background: #fee2e2; }
+
+.admin-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 2.5rem 1rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.admin-empty-state strong { color: var(--color-text-primary); }
+.admin-empty-state span { font-size: 0.85rem; }
+
+.admin-pagination {
+  padding-top: 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+}
+
+.admin-pagination > div { justify-content: flex-end; }
+
+.admin-slot-form {
+  margin: 1rem 0;
+  padding: 1.25rem;
+}
+
+.admin-slot-form .admin-section-heading {
+  margin-bottom: 1rem;
+}
+
+.admin-slot-form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-rate-input { max-width: 320px; }
+
+.admin-slots-table { min-width: 760px; }
+
+.admin-slot-status {
+  display: inline-block;
+  border-radius: 9999px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  white-space: nowrap;
+}
+
+.admin-slot-available { background: #dcfce7; color: #166534; }
+.admin-slot-reserved { background: #fef9c3; color: #854d0e; }
+.admin-slot-occupied { background: #fee2e2; color: #991b1b; }
+
+.admin-slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+@media (max-width: 760px) {
+  .admin-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 540px) {
+  .admin-dashboard-header,
+  .admin-dashboard-actions,
+  .admin-section-heading,
+  .admin-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-slot-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-transactions-section { padding: 1rem 0.75rem; }
+  .admin-pagination { flex-direction: row; align-items: center; }
+  .admin-dashboard-actions { flex-direction: row; align-items: center; }
+}
+
+@media (max-width: 420px) {
+  .admin-slot-form-grid { grid-template-columns: 1fr; }
+}
