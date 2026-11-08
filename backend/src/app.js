@@ -8,6 +8,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import slotRoutes from './routes/slotRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import qrRoutes from './routes/qrRoutes.js';
 import { getHistory } from './controllers/sessionController.js';
 import { requireAuth } from './middleware/requireAuth.js';
 
@@ -24,6 +25,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/slots', slotRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/qr', qrRoutes);
 app.get('/api/history', requireAuth, getHistory);
 
 app.get('/api/health', (req, res) => {

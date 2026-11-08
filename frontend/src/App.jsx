@@ -6,6 +6,7 @@ import Vehicles from './components/Vehicles';
 import SlotGrid from './components/SlotGrid';
 import ReservationModal from './components/ReservationModal';
 import Reservations from './components/Reservations';
+import StaffQrScanner from './components/StaffQrScanner';
 import AdminDashboard from './components/AdminDashboard';
 import AdminSlotManagement from './components/AdminSlotManagement';
 import { getUser, clearAuth, getProfile } from './services/api';
@@ -81,6 +82,7 @@ export default function App() {
         activeTab={activeTab}
         onSelectTab={handleSelectTab}
         onLogout={handleLogout}
+        isStaff={user?.role === 'staff'}
       />
 
       <main className="main-content">
@@ -114,6 +116,8 @@ export default function App() {
         {user && activeTab === 'vehicles' && (
           <Vehicles user={user} />
         )}
+
+        {user?.role === 'staff' && activeTab === 'scanner' && <StaffQrScanner />}
 
         {isAdmin && activeTab === 'admin' && (
           <AdminDashboard onManageSlots={() => setActiveTab('adminSlots')} />

@@ -1,4 +1,4 @@
-export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout }) {
+export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout, isStaff = false }) {
   return (
     <header className="navbar">
       <div className="navbar-container">
@@ -13,7 +13,6 @@ export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout
             }
           }}
         >
-          <span className="navbar-logo">🅿️</span>
           <span className="navbar-title">Smart Parking System</span>
         </div>
 
@@ -35,6 +34,15 @@ export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout
                   onClick={() => onSelectTab('admin')}
                 >
                   Admin Dashboard
+                </button>
+              )}
+              {isStaff && (
+                <button
+                  type="button"
+                  className={`nav-link ${activeTab === 'scanner' ? 'active' : ''}`}
+                  onClick={() => onSelectTab('scanner')}
+                >
+                  QR Scanner
                 </button>
               )}
               <button

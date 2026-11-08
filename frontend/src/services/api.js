@@ -193,3 +193,13 @@ export const cancelReservation = async (id) => {
     method: 'PUT',
   });
 };
+
+export const generateReservationQr = async (reservationId) => apiFetch('/api/qr/generate', {
+  method: 'POST',
+  body: JSON.stringify({ reservationId }),
+});
+
+export const validateReservationQr = async (token) => apiFetch('/api/qr/validate', {
+  method: 'POST',
+  body: JSON.stringify({ token }),
+});
