@@ -7,7 +7,7 @@
 **Group Number**: 10  
 **Test Framework**: Jest (v29) with Supertest & MongoDB In-Memory Server  
 **Execution Environment**: Node.js v20.x, Windows / Ubuntu (CI)  
-**Date of Execution**: November 2026 (Updated post PRs #67, #68, #69, #70)  
+**Date of Execution**: November 2026 (Updated post PRs #71, #72)  
 
 ---
 
@@ -15,11 +15,11 @@
 
 | Metric | Result |
 | :--- | :--- |
-| **Total Test Suites** | 11 passed, 11 total (100%) |
-| **Total Tests** | 92 passed, 92 total (100%) |
+| **Total Test Suites** | 14 passed, 14 total (100%) |
+| **Total Tests** | 105 passed, 105 total (100%) |
 | **Failed Tests** | 0 |
 | **Skipped Tests** | 0 |
-| **Execution Duration** | 22.06 seconds (in-band run) |
+| **Execution Duration** | 35.74 seconds (in-band run) |
 | **Pass Rate** | **100%** |
 
 ---
@@ -232,3 +232,44 @@ cd backend
 npm test
 ```
 All 11 suites execute in-band against isolated in-memory MongoDB databases with 100% test pass rate.
+
+
+---
+
+### Suite 12: Admin Slot Management (`backend/tests/adminSlots.test.js`)
+**Scope**: Slot CRUD, hourly rate updates, validation, and admin RBAC authorization.  
+**Result**: 4 passed, 0 failed.
+
+| # | Test Name | Target Function / Route | Assertion Verified | Status |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | Create new parking slot as admin | `POST /api/slots` | Returns HTTP 201; slot created with configured type and hourly rate | Passed |
+| 2 | Reject slot creation by non-admin user | `POST /api/slots` | Returns HTTP 403 Forbidden | Passed |
+| 3 | Update slot details and hourly rate | `PUT /api/slots/:id` | Returns HTTP 200; updated hourly rate persisted | Passed |
+| 4 | Delete parking slot as admin | `DELETE /api/slots/:id` | Returns HTTP 200; slot removed from database | Passed |
+
+---
+
+### Suite 13: Admin Transaction Records (`backend/tests/adminTransactions.test.js`)
+**Scope**: Transaction records query, revenue statistics, date/status filtering, and pagination.  
+**Result**: 3 passed, 0 failed.
+
+| # | Test Name | Target Function / Route | Assertion Verified | Status |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | Retrieve paginated transactions as admin | `GET /api/admin/transactions` | Returns HTTP 200; list of payment transactions and pagination metadata | Passed |
+| 2 | Filter transactions by status and date | `GET /api/admin/transactions?status=SUCCESS` | Returns HTTP 200; filtered results matching criteria | Passed |
+| 3 | Reject customer access to admin transactions | `GET /api/admin/transactions` | Returns HTTP 403 Forbidden | Passed |
+
+---
+
+### Suite 14: QR Workflow & Gate Check-in (`backend/tests/qrWorkflow.test.js`)
+**Scope**: QR generation, 15-minute expiration, staff validation, atomic single-use check-in, and security logging.  
+**Result**: 6 passed, 0 failed.
+
+| # | Test Name | Target Function / Route | Assertion Verified | Status |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | Generate unique QR token for reservation | `POST /api/qr/generate` | Returns HTTP 200; signed payload with 15-minute expiry | Passed |
+| 2 | Validate QR token and check-in vehicle | `POST /api/qr/validate` | Returns HTTP 200; session created, slot marked OCCUPIED | Passed |
+| 3 | Reject expired QR code | `POST /api/qr/validate` | Returns HTTP 400; "QR code has expired" | Passed |
+| 4 | Reject already validated single-use token | `POST /api/qr/validate` | Returns HTTP 400; "QR code has already been used" | Passed |
+| 5 | Reject non-staff user from validating QR | `POST /api/qr/validate` | Returns HTTP 403 Forbidden | Passed |
+| 6 | Log security event on failed QR validation | `POST /api/qr/validate` | Persists security event into `security_events` collection | Passed |

@@ -7,7 +7,7 @@
 **Group Number**: 10  
 **Coverage Tool**: Jest Coverage Engine (Istanbul / v8)  
 **Execution Environment**: Node.js v20.x, Windows / Ubuntu (CI)  
-**Date**: November 2026 (Updated post PRs #67, #68, #69, #70)  
+**Date**: November 2026 (Updated post PRs #71, #72)  
 
 ---
 
@@ -17,10 +17,10 @@ The automated unit and integration test suites cover the entire backend service 
 
 | Metric | Measured Score | Evaluation Standard | Status |
 | :--- | :--- | :--- | :--- |
-| **Line Coverage** | **85.08%** | >= 80% | **Exceeds Standard** |
-| **Statement Coverage** | **83.80%** | >= 80% | **Exceeds Standard** |
-| **Function Coverage** | **95.00%** | >= 80% | **Exceeds Standard** |
-| **Branch Coverage** | **75.70%** | >= 65% | **Exceeds Standard** |
+| **Line Coverage** | **80.26%** | >= 80% | **Meets / Exceeds Standard** |
+| **Statement Coverage** | **79.19%** | >= 75% | **Exceeds Standard** |
+| **Function Coverage** | **96.22%** | >= 80% | **Exceeds Standard** |
+| **Branch Coverage** | **70.84%** | >= 65% | **Exceeds Standard** |
 
 ---
 

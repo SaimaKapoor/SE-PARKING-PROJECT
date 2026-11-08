@@ -18,7 +18,7 @@
 
 ## 1. Document Overview
 
-This document presents the finalized, post-Sprint 3 test case suite for the Vehicle Parking System, superseding the preliminary test planning from Deliverable 4 and post-Sprint 2 documentation. Across Sprint 1, Sprint 2, and Sprint 3 (2nd Nov to 6th Nov 2026), all test cases were refined, expanded, and automated using Jest (v29), Supertest, and MongoMemoryServer, achieving **100% pass rate across all 11 test suites and 92 automated tests**.
+This document presents the finalized, post-Sprint 3 test case suite for the Vehicle Parking System, superseding the preliminary test planning from Deliverable 4 and post-Sprint 2 documentation. Across Sprint 1, Sprint 2, and Sprint 3 (2nd Nov to 6th Nov 2026), all test cases were refined, expanded, and automated using Jest (v29), Supertest, and MongoMemoryServer, achieving **100% pass rate across all 14 test suites and 105 automated tests**.
 
 ### Summary of Sprints Updates:
 1. **UT-01 (Fee Calculation - 7 Tests)**: Comprehensive boundary test suite testing zero duration, sub-hour rounding, exact 60-minute thresholds, multi-hour durations, negative duration rejection, and invalid hourly rate checks (`backend/tests/feeCalculation.test.js`).
@@ -135,4 +135,7 @@ This document presents the finalized, post-Sprint 3 test case suite for the Vehi
 | **NFR-002** | Backend availability & connection retry | `backend/src/config/db.js`<br>`backend/src/app.js` | `backend/tests/health.test.js`<br>`backend/tests/dbConnection.test.js` | **Passed (5/5)** |
 | **NFR-004** | QR token uniqueness & 15m expiration | `backend/src/models/ParkingSession.js` | `backend/tests/qrToken.test.js` | **Passed (3/3)** |
 | **B-010/B-011** | Vehicle registration & retrieval | `backend/src/controllers/vehicleController.js` | `backend/tests/vehicle.test.js` | **Passed (12/12)** |
-| **Overall** | **11 Test Suites Automated** | **All Backend Modules** | **Jest Test Engine** | **92/92 Passed (100%)** |
+| **Overall** | **14 Test Suites Automated** | **All Backend Modules** | **Jest Test Engine** | **105/105 Passed (100%)** |
+| **FR-012** | Admin slot & rate management | `backend/src/controllers/slotController.js` | `backend/tests/adminSlots.test.js` | **Passed (4/4)** |
+| **FR-014** | Admin transaction records & stats | `backend/src/controllers/adminController.js` | `backend/tests/adminTransactions.test.js` | **Passed (3/3)** |
+| **IT-01/IT-02** | QR token generate & gate validation | `backend/src/controllers/qrController.js` | `backend/tests/qrWorkflow.test.js` | **Passed (6/6)** |
