@@ -1,7 +1,7 @@
 import './setupMongo.js';
 import { jest, describe, beforeAll, afterAll, beforeEach, test, expect } from '@jest/globals';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import supertest from 'supertest';
 import jwt from 'jsonwebtoken';
 import app from '../src/app.js';
@@ -20,7 +20,7 @@ const generateToken = (userId, role = 'customer') => {
 };
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   await mongoose.connect(mongoServer.getUri());
   request = supertest(app);
 });

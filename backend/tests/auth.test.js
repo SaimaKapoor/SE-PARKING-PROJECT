@@ -46,6 +46,7 @@ describe('POST /api/auth/register', () => {
     expect(res.body.data.user).toBeDefined();
     expect(res.body.data.user.email).toBe(validUser.email);
     expect(res.body.data.user.name).toBe(validUser.name);
+    expect(res.body.data.token).toBeDefined();
   });
 
   test('should not return password in response', async () => {

@@ -17,6 +17,7 @@ export default function App() {
   const [profileChecked, setProfileChecked] = useState(() => !getUser());
   const [activeTab, setActiveTab] = useState('slots');
   const [selectedSlotForReservation, setSelectedSlotForReservation] = useState(null);
+  const [pendingSlotForReservation, setPendingSlotForReservation] = useState(null);
   const isAdmin = profileChecked && user?.role === 'admin';
   const isStaff = profileChecked && user?.role === 'staff';
 
@@ -49,6 +50,14 @@ export default function App() {
     setUser(loggedInUser);
     setProfileChecked(true);
     setActiveTab(loggedInUser.role === 'admin' ? 'admin' : 'slots');
+    if (pendingSlotForReservation) {
+      setSelectedSlotForReservation(pendingSlotForReservation);
+      setPendingSlotForReservation(null);
+    }
+  };
+
+  const handleRegisterSuccess = (registeredUser) => {
+    if (registeredUser) handleLoginSuccess(registeredUser);
   };
 
   const handleLogout = () => {
@@ -66,7 +75,8 @@ export default function App() {
 
   const handleSelectSlot = (slot) => {
     if (!user) {
-      setActiveTab('login');
+      setPendingSlotForReservation(slot);
+      setActiveTab('register');
       return;
     }
     setSelectedSlotForReservation(slot);
@@ -92,7 +102,10 @@ export default function App() {
           <SlotGrid
             user={user}
             onSelectSlot={handleSelectSlot}
-            onLoginPrompt={() => setActiveTab('login')}
+            onLoginPrompt={(slot) => {
+              setPendingSlotForReservation(slot);
+              setActiveTab('register');
+            }}
           />
         )}
 
@@ -106,6 +119,7 @@ export default function App() {
         {!user && activeTab === 'register' && (
           <Register
             onSwitchToLogin={() => setActiveTab('login')}
+            onRegistrationSuccess={handleRegisterSuccess}
           />
         )}
 

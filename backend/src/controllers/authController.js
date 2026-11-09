@@ -32,11 +32,16 @@ export const register = async (req, res) => {
       phone,
       vehicleNumber,
     });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'fallback_jwt_secret',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+    );
 
     return res.status(201).json({
       success: true,
       message: 'Registration successful',
-      data: { user },
+      data: { token, user },
     });
   } catch (error) {
     console.error('Registration error:', error.message);

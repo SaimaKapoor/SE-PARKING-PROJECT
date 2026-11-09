@@ -60,10 +60,13 @@ export const apiFetch = async (endpoint, options = {}) => {
 
 // Auth API Calls
 export const registerUser = async (formData) => {
-  return apiFetch('/api/auth/register', {
+  const result = await apiFetch('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify(formData),
   });
+  if (result.data?.token) setToken(result.data.token);
+  if (result.data?.user) setUser(result.data.user);
+  return result;
 };
 
 export const loginUser = async (credentials) => {

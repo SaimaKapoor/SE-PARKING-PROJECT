@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Reservation from '../models/Reservation.js';
 import ParkingSlot from '../models/ParkingSlot.js';
 import { recordSecurityEvent } from '../services/securityEventLogger.js';
+import { runInTransaction, transactionError } from '../services/mongoTransaction.js';
 
 /**
  * Helper to generate a unique human-friendly reservation code: RES-XXXXXX
@@ -43,47 +44,40 @@ export async function createReservation(req, res) {
       });
     }
 
-    // Check if slot exists
-    const slot = await ParkingSlot.findOne({
-      $or: [{ slotNumber: slotId }, { slotId: slotId }],
-    });
-
-    if (!slot) {
-      return res.status(404).json({
-        success: false,
-        message: `Parking slot "${slotId}" not found`,
-      });
-    }
-
-    // UT-02: Reject reservation of occupied or already reserved slot
-    if (slot.status !== 'AVAILABLE') {
-      return res.status(409).json({
-        success: false,
-        message: `Parking slot "${slotId}" is currently ${slot.status.toLowerCase()} and cannot be reserved`,
-      });
-    }
-
     const durationHours = Number(req.body.durationHours) || 2;
     const startTime = new Date();
     const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
 
     const reservationId = generateReservationId();
 
-    const reservation = await Reservation.create({
-      reservationId,
-      userId: req.user._id,
-      vehicleId,
-      slotId: slot.slotNumber || slot.slotId,
-      slot: slot._id,
-      status: 'CONFIRMED',
-      startTime,
-      endTime,
-    });
+    const { reservation, slot } = await runInTransaction(async (session) => {
+      const availableSlot = await ParkingSlot.findOne({
+        $or: [{ slotNumber: slotId }, { slotId }],
+      }).session(session);
+      if (!availableSlot) throw transactionError(`Parking slot "${slotId}" not found`, 404);
+      if (availableSlot.status !== 'AVAILABLE') {
+        throw transactionError(`Parking slot "${slotId}" is currently ${availableSlot.status.toLowerCase()} and cannot be reserved`, 409);
+      }
 
-    // Update slot status to RESERVED and link reservation
-    slot.status = 'RESERVED';
-    slot.currentReservationId = reservation._id;
-    await slot.save();
+      const [newReservation] = await Reservation.create([{
+        reservationId,
+        userId: req.user._id,
+        vehicleId,
+        slotId: availableSlot.slotNumber || availableSlot.slotId,
+        slot: availableSlot._id,
+        status: 'CONFIRMED',
+        startTime,
+        endTime,
+      }], { session });
+
+      const updatedSlot = await ParkingSlot.findOneAndUpdate(
+        { _id: availableSlot._id, status: 'AVAILABLE' },
+        { $set: { status: 'RESERVED', currentReservationId: newReservation._id } },
+        { new: true, session }
+      );
+      if (!updatedSlot) throw transactionError('Parking slot is no longer available', 409);
+      return { reservation: newReservation, slot: updatedSlot };
+    });
 
     return res.status(201).json({
       success: true,
@@ -96,9 +90,9 @@ export async function createReservation(req, res) {
     });
   } catch (error) {
     console.error('Reservation creation error:', error.message);
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: 'Failed to create reservation',
+      message: error.statusCode ? error.message : 'Failed to create reservation',
     });
   }
 }
@@ -224,37 +218,34 @@ export async function cancelReservation(req, res) {
       });
     }
 
-    reservation.status = 'CANCELLED';
-    await reservation.save();
-
-    // Revert slot status back to AVAILABLE if it was reserved by this reservation
-    await ParkingSlot.findOneAndUpdate(
-      {
-        $or: [
-          { currentReservationId: reservation._id },
-          { slotNumber: reservation.slotId, status: 'RESERVED' },
-          { slotId: reservation.slotId, status: 'RESERVED' },
-        ],
-      },
-      {
-        $set: {
-          status: 'AVAILABLE',
-          currentReservationId: null,
-        },
+    const cancelledReservation = await runInTransaction(async (session) => {
+      const current = await Reservation.findById(reservation._id).session(session);
+      if (!current || current.status !== 'CONFIRMED') {
+        throw transactionError('Reservation is no longer confirmed', 409);
       }
-    );
+      current.status = 'CANCELLED';
+      await current.save({ session });
+
+      const releasedSlot = await ParkingSlot.findOneAndUpdate(
+        { _id: current.slot, currentReservationId: current._id, status: 'RESERVED' },
+        { $set: { status: 'AVAILABLE', currentReservationId: null } },
+        { new: true, session }
+      );
+      if (!releasedSlot) throw transactionError('Reserved slot state changed; cancellation was rolled back', 409);
+      return current;
+    });
 
     return res.status(200).json({
       success: true,
       message: 'Reservation cancelled successfully and slot released',
-      data: { reservation },
-      reservation,
+      data: { reservation: cancelledReservation },
+      reservation: cancelledReservation,
     });
   } catch (error) {
     console.error('Error cancelling reservation:', error.message);
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: 'Failed to cancel reservation',
+      message: error.statusCode ? error.message : 'Failed to cancel reservation',
     });
   }
 }
