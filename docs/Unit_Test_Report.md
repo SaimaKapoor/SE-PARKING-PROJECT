@@ -7,7 +7,7 @@
 **Group Number**: 10  
 **Test Framework**: Jest (v29) with Supertest & MongoDB In-Memory Server  
 **Execution Environment**: Node.js v20.x, Windows / Ubuntu (CI)  
-**Date of Execution**: November 2026 (Updated post PRs #71, #72)  
+**Date of Execution**: November 2026 (Updated post PRs #73, #74)  
 
 ---
 
@@ -15,11 +15,11 @@
 
 | Metric | Result |
 | :--- | :--- |
-| **Total Test Suites** | 14 passed, 14 total (100%) |
-| **Total Tests** | 105 passed, 105 total (100%) |
+| **Total Test Suites** | 17 passed, 17 total (100%) |
+| **Total Tests** | 113 passed, 113 total (100%) |
 | **Failed Tests** | 0 |
 | **Skipped Tests** | 0 |
-| **Execution Duration** | 35.74 seconds (in-band run) |
+| **Execution Duration** | 58.66 seconds (in-band run) |
 | **Pass Rate** | **100%** |
 
 ---
@@ -273,3 +273,39 @@ All 11 suites execute in-band against isolated in-memory MongoDB databases with 
 | 4 | Reject already validated single-use token | `POST /api/qr/validate` | Returns HTTP 400; "QR code has already been used" | Passed |
 | 5 | Reject non-staff user from validating QR | `POST /api/qr/validate` | Returns HTTP 403 Forbidden | Passed |
 | 6 | Log security event on failed QR validation | `POST /api/qr/validate` | Persists security event into `security_events` collection | Passed |
+
+
+---
+
+### Suite 15: Staff Entry/Exit Dashboard (`backend/tests/staffDashboard.test.js`)
+**Scope**: Active session listing, manual entry/exit triggers, and staff authorization enforcement.  
+**Result**: 4 passed, 0 failed.
+
+| # | Test Name | Target Function / Route | Assertion Verified | Status |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | Retrieve active parking sessions as staff | `GET /api/sessions/active` | Returns HTTP 200; list of active sessions with populated slot details | Passed |
+| 2 | Reject customer access to active sessions endpoint | `GET /api/sessions/active` | Returns HTTP 403 Forbidden | Passed |
+| 3 | Process vehicle entry gate check-in | `POST /api/sessions/entry` | Returns HTTP 201; slot occupied and session created | Passed |
+| 4 | Process vehicle exit gate check-out with calculated fee | `POST /api/sessions/exit` | Returns HTTP 200; exit timestamp and parking fee returned | Passed |
+
+---
+
+### Suite 16: Usability & Customer Journey Timing (`backend/tests/customerJourneyTiming.test.js`)
+**Scope**: Verification of NFR-003 (registration to QR token generation in under 3 minutes).  
+**Result**: 1 passed, 0 failed.
+
+| # | Test Name | Target Function / Route | Assertion Verified | Status |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | Complete customer registration to QR code generation under 3 minutes | Multi-step integration flow | Total elapsed time < 180,000 ms (measured at 566 ms in automated test) | Passed |
+
+---
+
+### Suite 17: Transaction Data Integrity & Concurrency (`backend/tests/transactionIntegrity.test.js`)
+**Scope**: Verification of NFR-005 (99% transaction data integrity, atomic session abort/rollback).  
+**Result**: 3 passed, 0 failed.
+
+| # | Test Name | Target Function / Route | Assertion Verified | Status |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | Execute atomic multi-document transaction with automated rollback | `mongoTransaction.runInTransaction` | Rolls back state on injected error; zero orphaned records created | Passed |
+| 2 | Maintain 100% data consistency across 100 concurrent/sequential operations | Multi-document booking | 100/100 simulated operations preserve data integrity without state drift | Passed |
+| 3 | Graceful fallback when standalone MongoDB instance has no replica set | `runInTransaction` | Executes work function safely without throwing replica set exceptions | Passed |
