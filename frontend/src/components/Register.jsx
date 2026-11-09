@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { registerUser } from '../services/api';
 
-export default function Register({ onSwitchToLogin }) {
+export default function Register({ onSwitchToLogin, onRegistrationSuccess }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -84,7 +84,7 @@ export default function Register({ onSwitchToLogin }) {
     setLoading(true);
 
     try {
-      await registerUser({
+      const response = await registerUser({
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
@@ -92,10 +92,8 @@ export default function Register({ onSwitchToLogin }) {
         vehicleNumber: formData.vehicleNumber.trim().toUpperCase(),
       });
 
-      setSuccessMsg('Registration successful! Redirecting to login...');
-      setTimeout(() => {
-        onSwitchToLogin();
-      }, 1500);
+      setSuccessMsg('Account created. Signing you in…');
+      onRegistrationSuccess(response.data?.user);
     } catch (err) {
       if (err.errors && err.errors.length > 0) {
         const fieldErrors = {};
@@ -220,7 +218,7 @@ export default function Register({ onSwitchToLogin }) {
         </div>
 
         <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-          {loading ? 'Creating Account...' : 'Register'}
+          {loading ? 'Creating account...' : 'Create account & continue'}
         </button>
       </form>
 

@@ -64,7 +64,7 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
 
   const handleSlotClick = (slot) => {
     if (!user) {
-      if (onLoginPrompt) onLoginPrompt();
+      if (onLoginPrompt) onLoginPrompt(slot);
       return;
     }
 

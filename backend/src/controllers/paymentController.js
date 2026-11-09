@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import ParkingSession from '../models/ParkingSession.js';
 import Payment from '../models/Payment.js';
+import { runInTransaction, transactionError } from '../services/mongoTransaction.js';
 
 export async function processMockPayment(req, res) {
   try {
@@ -9,37 +10,43 @@ export async function processMockPayment(req, res) {
     if (!sessionId || !mongoose.isValidObjectId(sessionId)) {
       return res.status(400).json({ success: false, message: 'A valid sessionId is required' });
     }
-    const session = await ParkingSession.findOne({ _id: sessionId, customerId: req.user._id });
-    if (!session) return res.status(404).json({ success: false, message: 'Parking session not found' });
-    if (session.status !== 'AWAITING_PAYMENT') {
-      return res.status(409).json({ success: false, message: 'Session is not awaiting payment' });
-    }
-    const existing = await Payment.findOne({ sessionId, status: 'SUCCESS' });
-    if (existing) {
-      return res.json({ success: true, message: 'Payment was already completed', data: { payment: existing, session } });
-    }
     if (!['success', 'failure'].includes(outcome)) {
       return res.status(400).json({ success: false, message: 'outcome must be success or failure' });
     }
 
     const succeeded = outcome === 'success';
-    const payment = await Payment.create({
-      sessionId,
-      customerId: req.user._id,
-      amount: session.fee,
-      status: succeeded ? 'SUCCESS' : 'FAILED',
-      provider: 'MOCK',
-      transactionReference: `MOCK-${crypto.randomUUID()}`,
+    const result = await runInTransaction(async (mongoSession) => {
+      const parkingSession = await ParkingSession.findOne({ _id: sessionId, customerId: req.user._id }).session(mongoSession);
+      if (!parkingSession) throw transactionError('Parking session not found', 404);
+      if (parkingSession.status !== 'AWAITING_PAYMENT') {
+        throw transactionError('Session is not awaiting payment', 409);
+      }
+      const existing = await Payment.findOne({ sessionId, status: 'SUCCESS' }).session(mongoSession);
+      if (existing) return { payment: existing, session: parkingSession, alreadyCompleted: true };
+
+      const [payment] = await Payment.create([{
+        sessionId,
+        customerId: req.user._id,
+        amount: parkingSession.fee,
+        status: succeeded ? 'SUCCESS' : 'FAILED',
+        provider: 'MOCK',
+        transactionReference: `MOCK-${crypto.randomUUID()}`,
+      }], { session: mongoSession });
+      parkingSession.paymentStatus = succeeded ? 'PAID' : 'FAILED';
+      await parkingSession.save({ session: mongoSession });
+      return { payment, session: parkingSession, alreadyCompleted: false };
     });
-    session.paymentStatus = succeeded ? 'PAID' : 'FAILED';
-    await session.save();
+
+    if (result.alreadyCompleted) {
+      return res.json({ success: true, message: 'Payment was already completed', data: { payment: result.payment, session: result.session } });
+    }
     return res.status(succeeded ? 201 : 402).json({
       success: succeeded,
       message: succeeded ? 'Mock payment successful' : 'Mock payment failed',
-      data: { payment, session },
+      data: { payment: result.payment, session: result.session },
     });
   } catch (error) {
     console.error('Payment error:', error.message);
-    return res.status(500).json({ success: false, message: 'Could not process payment' });
+    return res.status(error.statusCode || 500).json({ success: false, message: error.statusCode ? error.message : 'Could not process payment' });
   }
 }

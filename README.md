@@ -112,10 +112,11 @@ flowchart TD
    Create a `.env` file in the `backend/` directory (or copy from `.env.example`):
    ```env
    PORT=5000
-   MONGODB_URI=mongodb://127.0.0.1:27017/vehicle_parking
+   MONGODB_URI=mongodb://127.0.0.1:27017/vehicle_parking?replicaSet=rs0
    JWT_SECRET=super_secret_jwt_key_pes_se_2026
    JWT_EXPIRES_IN=24h
    ```
+   Local MongoDB must run as a single-node replica set named `rs0` for multi-document transactions (for example, start `mongod --replSet rs0`, then run `mongosh --eval "rs.initiate()"`). Docker Compose configures this automatically.
    Start the backend development server:
    ```bash
    npm run dev
@@ -151,7 +152,7 @@ docker compose up --build
 | Variable Name | Default Value | Description |
 | :--- | :--- | :--- |
 | `PORT` | `5000` | HTTP port on which the Express server listens |
-| `MONGODB_URI` | `mongodb://127.0.0.1:27017/vehicle_parking` | Connection URI for the MongoDB database |
+| `MONGODB_URI` | `mongodb://127.0.0.1:27017/vehicle_parking?replicaSet=rs0` | Connection URI for the MongoDB replica set (transactions require a replica set or sharded cluster) |
 | `JWT_SECRET` | *(Required)* | Cryptographic secret key used to sign and verify JWT tokens |
 | `JWT_EXPIRES_IN` | `24h` | Token expiration duration (e.g., `1h`, `24h`, `7d`) |
 

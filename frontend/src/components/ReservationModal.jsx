@@ -4,11 +4,11 @@ import ReservationQrCard from './ReservationQrCard';
 
 export default function ReservationModal({ slot, user, onClose, onReservationSuccess }) {
   const [vehicles, setVehicles] = useState([]);
-  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [selectedVehicle, setSelectedVehicle] = useState(user?.vehicleNumber || '');
   const [customVehicle, setCustomVehicle] = useState('');
   const [durationHours, setDurationHours] = useState(2);
   const [loading, setLoading] = useState(false);
-  const [fetchingVehicles, setFetchingVehicles] = useState(true);
+  const [fetchingVehicles, setFetchingVehicles] = useState(false);
   const [error, setError] = useState('');
   const [confirmedReservation, setConfirmedReservation] = useState(null);
 
@@ -22,7 +22,7 @@ export default function ReservationModal({ slot, user, onClose, onReservationSuc
         if (list.length > 0) {
           // Preselect user's first matching vehicle type if available
           const matching = list.find((v) => v.vehicleType === slot.type) || list[0];
-          setSelectedVehicle(matching.vehicleNumber);
+          setSelectedVehicle((current) => current || matching.vehicleNumber);
         } else if (user?.vehicleNumber) {
           setSelectedVehicle(user.vehicleNumber);
         }
