@@ -18,6 +18,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('slots');
   const [selectedSlotForReservation, setSelectedSlotForReservation] = useState(null);
   const isAdmin = profileChecked && user?.role === 'admin';
+  const isStaff = profileChecked && user?.role === 'staff';
 
   useEffect(() => {
     // Validate session on mount if token exists
@@ -59,6 +60,7 @@ export default function App() {
 
   const handleSelectTab = (tab) => {
     if (tab === 'admin' && !isAdmin) return;
+    if (tab === 'scanner' && !isStaff) return;
     setActiveTab(tab);
   };
 
@@ -82,7 +84,7 @@ export default function App() {
         activeTab={activeTab}
         onSelectTab={handleSelectTab}
         onLogout={handleLogout}
-        isStaff={user?.role === 'staff'}
+        isStaff={isStaff}
       />
 
       <main className="main-content">
@@ -117,7 +119,7 @@ export default function App() {
           <Vehicles user={user} />
         )}
 
-        {user?.role === 'staff' && activeTab === 'scanner' && <StaffQrScanner />}
+        {isStaff && activeTab === 'scanner' && <StaffQrScanner />}
 
         {isAdmin && activeTab === 'admin' && (
           <AdminDashboard onManageSlots={() => setActiveTab('adminSlots')} />

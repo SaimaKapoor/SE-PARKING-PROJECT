@@ -203,3 +203,14 @@ export const validateReservationQr = async (token) => apiFetch('/api/qr/validate
   method: 'POST',
   body: JSON.stringify({ token }),
 });
+
+export const fetchActiveSessions = async () => apiFetch('/api/sessions/active', { method: 'GET' });
+
+export const recordStaffEntry = async (reservationId) => apiFetch('/api/sessions/staff/entry', {
+  method: 'POST',
+  body: JSON.stringify({ reservationId }),
+});
+
+export const recordStaffExit = async (sessionId) => apiFetch(`/api/sessions/staff/${sessionId}/exit`, {
+  method: 'POST',
+});
