@@ -1,3 +1,4 @@
+import './setupMongo.js';
 import { afterEach, describe, expect, jest, test } from '@jest/globals';
 import mongoose from 'mongoose';
 import { connectDB } from '../src/config/db.js';

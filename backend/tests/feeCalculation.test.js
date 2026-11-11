@@ -1,3 +1,4 @@
+import './setupMongo.js';
 import { describe, expect, test } from '@jest/globals';
 import { calculateParkingFee } from '../src/services/feeCalculation.js';
 

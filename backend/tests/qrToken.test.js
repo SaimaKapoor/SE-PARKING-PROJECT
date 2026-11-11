@@ -1,3 +1,4 @@
+import './setupMongo.js';
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';

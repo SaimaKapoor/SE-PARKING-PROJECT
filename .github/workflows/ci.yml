@@ -17,6 +17,7 @@ jobs:
   health-check:
     name: Code & Structure Health Check
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,6 +39,7 @@ jobs:
   backend-ci:
     name: Backend CI (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         node-version: [18.x, 20.x]
@@ -93,6 +95,7 @@ jobs:
   frontend-ci:
     name: Frontend CI (React + Vite)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -145,6 +148,7 @@ jobs:
     name: CI Pipeline Status
     needs: [health-check, backend-ci, frontend-ci]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: always()
     steps:
       - name: Check overall result

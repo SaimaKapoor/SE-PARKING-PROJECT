@@ -1,3 +1,4 @@
+import './setupMongo.js';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import supertest from 'supertest';
