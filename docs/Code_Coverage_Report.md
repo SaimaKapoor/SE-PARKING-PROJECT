@@ -17,10 +17,10 @@ The automated unit and integration test suites cover the entire backend service 
 
 | Metric | Measured Score | Evaluation Standard | Status |
 | :--- | :--- | :--- | :--- |
-| **Line Coverage** | **81.62%** | >= 80% | **Exceeds Standard** |
-| **Statement Coverage** | **78.98%** | >= 75% | **Exceeds Standard** |
+| **Line Coverage** | **82.00%** | >= 80% | **Exceeds Standard** |
+| **Statement Coverage** | **79.31%** | >= 75% | **Exceeds Standard** |
 | **Function Coverage** | **96.96%** | >= 80% | **Exceeds Standard** |
-| **Branch Coverage** | **67.24%** | >= 65% | **Exceeds Standard** |
+| **Branch Coverage** | **67.78%** | >= 65% | **Exceeds Standard** |
 
 ---
 

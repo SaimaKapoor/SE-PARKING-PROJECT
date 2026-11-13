@@ -12,13 +12,13 @@
 - Rohan Jadar (PES1UG24CS379)
 
 **Date**: November 2026  
-**Document Version**: 3.1 (Post-Sprint 3 Finalization - 18 Test Suites, 115 Tests)
+**Document Version**: 3.0 (Post-Sprint 3 Update - 17 Test Suites, 113 Tests)
 
 ---
 
 ## 1. Document Overview
 
-This document presents the finalized, post-Sprint 3 test case suite for the Vehicle Parking System, superseding the preliminary test planning from Deliverable 4 and post-Sprint 2 documentation. Across Sprint 1, Sprint 2, and Sprint 3 (2nd Nov to 6th Nov 2026), all test cases were refined, expanded, and automated using Jest (v29), Supertest, and MongoMemoryServer, achieving **100% pass rate across all 18 test suites and 115 automated tests**.
+This document presents the finalized, post-Sprint 3 test case suite for the Vehicle Parking System, superseding the preliminary test planning from Deliverable 4 and post-Sprint 2 documentation. Across Sprint 1, Sprint 2, and Sprint 3 (2nd Nov to 6th Nov 2026), all test cases were refined, expanded, and automated using Jest (v29), Supertest, and MongoMemoryServer, achieving **100% pass rate across all 17 test suites and 113 automated tests**.
 
 ### Summary of Sprints Updates:
 1. **UT-01 (Fee Calculation - 7 Tests)**: Comprehensive boundary test suite testing zero duration, sub-hour rounding, exact 60-minute thresholds, multi-hour durations, negative duration rejection, and invalid hourly rate checks (`backend/tests/feeCalculation.test.js`).
@@ -31,7 +31,6 @@ This document presents the finalized, post-Sprint 3 test case suite for the Vehi
 8. **High Availability & Database Resilience (NFR-002 - 5 Tests)**: Added in Sprint 3 (`backend/tests/health.test.js`, `backend/tests/dbConnection.test.js`), testing `/health` liveness/readiness reporting, exponential backoff retries on transient connection failures, and bounded retry termination.
 9. **Persistent Security Event Logging (SEC-006 - 5 Tests)**: Added in Sprint 3 (`backend/tests/securityEvent.test.js`), verifying tamper-resistant audit logging in MongoDB for failed logins, unauthenticated requests, RBAC denials, and ownership violations without leaking sensitive credentials.
 10. **Session & Payment Integration Flow (IT-03, IT-04, ST-01, ST-05 - 1 Integration Suite)**: Automated full end-to-end flow in `backend/tests/paymentFlow.test.js` integrating slot check-in, duration calculation, mock payment processing, session completion, slot release, and customer history retrieval.
-11. **Performance & Slot Availability Under Load (NFR-001 / PERF-01 - 2 Tests)**: Automated load testing in `backend/tests/performance.test.js` validating concurrent slot queries (`GET /api/slots?status=AVAILABLE`) under 50 simultaneous requests with 100% completing under 2 seconds (average latency 191.6ms, max 213ms) utilizing the compound index `{ status: 1, type: 1, floor: 1 }`.
 
 ---
 
@@ -93,13 +92,6 @@ This document presents the finalized, post-Sprint 3 test case suite for the Vehi
 | **SEC-006** | Security | Persistent security event logging | Invalid login or unauthorized request occurs | Send invalid login / forbidden request; inspect `security_events` collection | Invalid credentials / forbidden role access | Event persisted with event type, severity, IP address, and timestamp without sensitive credentials | Verified across 5 tests in `securityEvent.test.js` | **Passed** |
 | **SEC-007** | Security / NFR-004 | Unique expiring QR tokens | QR token generated for session | Generate multiple QR tokens and check uniqueness & expiration | Multiple reservation requests | Distinct UUIDs generated; `validUntil` set to exactly 15 minutes; expired tokens rejected | Verified across 3 tests in `qrToken.test.js` | **Passed** |
 
-### 2.4 Performance Tests (PERF)
-
-| Test Case ID | Category | Description | Precondition | Execution Steps | Test Data | Expected Result | Actual Result | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **PERF-01a** | Performance | Slot availability under concurrent load | Database populated with multi-floor slots; compound index `{ status: 1, type: 1, floor: 1 }` active | 50 concurrent requests to `GET /api/slots?status=AVAILABLE` | 50 concurrent requests | At least 95% of requests complete within 2 seconds | 100% completed in < 215 ms (avg 191.6 ms) | **Passed** |
-| **PERF-01b** | Performance | Concurrent filtered slot queries under load | Database populated with slots across floors and vehicle types | 30 concurrent filtered queries (`?status=AVAILABLE&type=4-wheeler&floor=1`) | 30 concurrent requests | At least 95% of requests complete within 2 seconds | 100% completed in < 120 ms | **Passed** |
-
 ---
 
 ## 3. Test Data Matrix
@@ -143,8 +135,8 @@ This document presents the finalized, post-Sprint 3 test case suite for the Vehi
 | **NFR-002** | Backend availability & connection retry | `backend/src/config/db.js`<br>`backend/src/app.js` | `backend/tests/health.test.js`<br>`backend/tests/dbConnection.test.js` | **Passed (5/5)** |
 | **NFR-004** | QR token uniqueness & 15m expiration | `backend/src/models/ParkingSession.js` | `backend/tests/qrToken.test.js` | **Passed (3/3)** |
 | **B-010/B-011** | Vehicle registration & retrieval | `backend/src/controllers/vehicleController.js` | `backend/tests/vehicle.test.js` | **Passed (12/12)** |
-| **NFR-001** | Performance: slot availability response < 2s for 95% requests (PERF-01) | `backend/src/models/ParkingSlot.js`<br>`backend/src/controllers/slotController.js` | `backend/tests/performance.test.js` | **Passed (2/2, 100%)** |
-| **Overall** | **18 Test Suites Automated** | **All Backend Modules** | **Jest Test Engine** | **115/115 Passed (100%)** |
+| **NFR-001** | Performance: slot availability response < 2s for 95% requests (PERF-01) | `backend/src/models/ParkingSlot.js`<br>`backend/src/controllers/slotController.js` | Load test under development (Issue #45 / #57) | **Pending Execution** |
+| **Overall** | **17 Test Suites Automated** | **All Backend Modules** | **Jest Test Engine** | **113/113 Passed (100%)** |
 | **FR-008** | Staff entry/exit dashboard & active sessions | `backend/src/controllers/sessionController.js` | `backend/tests/staffDashboard.test.js` | **Passed (4/4)** |
 | **NFR-003** | Usability: Registration to QR in under 3 minutes | `frontend/src/components/Register.jsx` | `backend/tests/customerJourneyTiming.test.js` | **Passed (566ms)** |
 | **NFR-005** | Reliability: 99% transaction data integrity | `backend/src/services/mongoTransaction.js` | `backend/tests/transactionIntegrity.test.js` | **Passed (100/100)** |

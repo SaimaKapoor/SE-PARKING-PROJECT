@@ -109,7 +109,7 @@ sequenceDiagram
 ### NFR-001: Performance & Response Time Under Concurrent Load (PERF-01)
 - **Criterion**: The system shall display parking-slot availability within 2 seconds for at least 95% of requests under the defined concurrent test load.
 - **Implementation**: Compound indexing on `{ status: 1, type: 1, floor: 1 }` in `ParkingSlot.js` combined with lean Mongoose query projections in `slotController.js`.
-- **Result**: Automated load testing in `backend/tests/performance.test.js` executed 50 concurrent requests against `GET /api/slots?status=AVAILABLE`. 100% of requests completed in under 215ms (average latency **191.6ms**, maximum **213ms**), significantly surpassing the 2.0s requirement (**100% compliance**). Concurrent filtered queries (by floor and vehicle type) completed in under 120ms.
+- **Status**: Database schema optimizations and compound indexes implemented; standalone load testing suite is pending execution under Issue #45 and Issue #57.
 
 ### NFR-002: System Availability & Liveness
 - **Criterion**: System maintains operational uptime and reports health status.
@@ -135,4 +135,4 @@ sequenceDiagram
 
 ## 5. Conclusion
 
-The Vehicle Parking System satisfies all functional requirements (FR-001 through FR-014), all non-functional requirements (NFR-001 through NFR-006), and all security criteria (SEC-001 to SEC-007) established in Deliverable 2, Deliverable 3, and Deliverable 4. All automated test suites (18 suites, 115 tests) pass with 100% compliance across both local and CI/CD pipeline environments.
+The Vehicle Parking System satisfies all 14 functional requirements (FR-001 through FR-014), non-functional requirements (NFR-002 through NFR-006), and all security criteria (SEC-001 to SEC-007) established in Deliverable 2, Deliverable 3, and Deliverable 4. All automated test suites (17 suites, 113 tests) pass with 100% compliance across both local and CI/CD pipeline environments. NFR-001 (PERF-01) performance load testing remains tracked under Sprint 2 backlog issues #45 and #57.
