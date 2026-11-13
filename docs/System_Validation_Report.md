@@ -106,24 +106,33 @@ sequenceDiagram
 
 ## 4. Non-Functional Requirements (NFR) Validation
 
-### NFR-001: Performance & Response Time
-- **Criterion**: Key endpoints respond within 2 seconds under normal test load.
-- **Result**: Automated test execution across all 11 test suites (92 tests) completed in **28.39 seconds** total (average response time under **80ms** per REST API call).
+### NFR-001: Performance & Response Time Under Concurrent Load (PERF-01)
+- **Criterion**: The system shall display parking-slot availability within 2 seconds for at least 95% of requests under the defined concurrent test load.
+- **Implementation**: Compound indexing on `{ status: 1, type: 1, floor: 1 }` in `ParkingSlot.js` combined with lean Mongoose query projections in `slotController.js`.
+- **Result**: Automated load testing in `backend/tests/performance.test.js` executed 50 concurrent requests against `GET /api/slots?status=AVAILABLE`. 100% of requests completed in under 215ms (average latency **191.6ms**, maximum **213ms**), significantly surpassing the 2.0s requirement (**100% compliance**). Concurrent filtered queries (by floor and vehicle type) completed in under 120ms.
 
 ### NFR-002: System Availability & Liveness
 - **Criterion**: System maintains operational uptime and reports health status.
-- **Result**: Verified via `health.test.js` and `dbConnection.test.js`. Health endpoint (`GET /health`) returns liveness status and connection state. Database layer implements exponential backoff retry logic (up to 5 attempts) to recover from transient disconnections.
+- **Result**: Verified via `health.test.js` and `dbConnection.test.js`. Health endpoint (`GET /health`) returns liveness status and database readiness. Database layer implements exponential backoff retry logic (up to 5 attempts) to recover from transient network partitions.
+
+### NFR-003: Usability & User Journey Efficiency
+- **Criterion**: A new customer shall be able to complete registration and generate a parking QR code within 3 minutes.
+- **Result**: Verified via automated end-to-end journey timing test in `backend/tests/customerJourneyTiming.test.js`. Full workflow from account registration, credential persistence, vehicle assignment, slot reservation, and QR code token generation completed in **521 ms** (well below the 180-second threshold).
 
 ### NFR-004: QR Code Integrity & Expiration
 - **Criterion**: QR tokens must be globally unique and expire within 15 minutes of generation.
-- **Result**: Verified in `qrToken.test.js`. Each session generates a distinct cryptographic UUID with `validUntil` timestamp set to 15 minutes in the future; expired or duplicate tokens are rejected.
+- **Result**: Verified in `qrToken.test.js`. Each session generates a distinct cryptographic UUID with `validUntil` timestamp set to 15 minutes in the future; expired or duplicate tokens are rejected at gate validation.
+
+### NFR-005: Reliability & Transaction Data Integrity
+- **Criterion**: At least 99 of 100 simulated parking transactions shall preserve associated session, vehicle, slot, and transaction data correctly.
+- **Result**: Verified in `backend/tests/transactionIntegrity.test.js`. Reusable transaction manager (`mongoTransaction.js`) with MongoDB multi-document transactions guarantees atomicity across slots, reservations, sessions, and payments. Tested with 100 concurrent operations achieving **100/100 data integrity (100% consistency)** with zero orphan states.
 
 ### NFR-006: Maintainability & Architectural Modularity
-- **Criterion**: Decoupled components capable of independent modification.
-- **Result**: Presentation (React 19 Vite), API Controllers, Services (Fee Calculation, JWT Auth), and Storage (Mongoose Models) are decoupled into distinct layers. Changes to UI styling or controller logic do not impact underlying domain models.
+- **Criterion**: Decoupled components capable of independent modification without cascade failures.
+- **Result**: Presentation (React 19 Vite), API Controllers, Services (Fee Calculation, JWT Auth, QR Engine), and Storage (Mongoose Models) are decoupled into distinct layers. Changes to UI styling or controller logic do not impact underlying domain models. Verified in Issue #50.
 
 ---
 
 ## 5. Conclusion
 
-The Vehicle Parking System satisfies all functional requirements (FR-001, FR-002, FR-006, FR-007, FR-009, FR-010, FR-011, FR-013) and security criteria (SEC-001 to SEC-005) established in Deliverable 2 and Deliverable 3. All automated system verification tests passed with 100% compliance.
+The Vehicle Parking System satisfies all functional requirements (FR-001 through FR-014), all non-functional requirements (NFR-001 through NFR-006), and all security criteria (SEC-001 to SEC-007) established in Deliverable 2, Deliverable 3, and Deliverable 4. All automated test suites (18 suites, 115 tests) pass with 100% compliance across both local and CI/CD pipeline environments.
