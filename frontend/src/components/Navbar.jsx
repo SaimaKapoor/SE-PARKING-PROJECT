@@ -70,9 +70,6 @@ export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout
               <div className="user-profile">
                 <i className="las la-user-circle" style={{ marginRight: '4px', fontSize: '1.1rem' }}></i>
                 <span className="user-name">{user.name}</span>
-                <span className="role-badge">
-                  {user.role || 'customer'}
-                </span>
               </div>
               <button
                 type="button"

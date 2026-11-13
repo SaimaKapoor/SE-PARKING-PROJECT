@@ -51,8 +51,8 @@ export default function Register({ onSwitchToLogin, onRegistrationSuccess }) {
 
     if (!formData.vehicleNumber.trim()) {
       newErrors.vehicleNumber = 'Vehicle registration number is required';
-    } else if (formData.vehicleNumber.trim().length < 2) {
-      newErrors.vehicleNumber = 'Vehicle number must be at least 2 characters';
+    } else if (!/^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{4}$/.test(formData.vehicleNumber.trim())) {
+      newErrors.vehicleNumber = 'Invalid format. Use Indian plate format, e.g. KA01AB1234';
     }
 
     setErrors(newErrors);

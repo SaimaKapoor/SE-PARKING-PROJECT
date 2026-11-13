@@ -58,7 +58,7 @@ body {
 }
 
 .navbar-container {
-  max-width: 1100px;
+  max-width: 1300px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -148,10 +148,10 @@ body {
 /* Main Content */
 .main-content {
   flex: 1;
-  max-width: 1000px;
+  max-width: 1300px;
   width: 100%;
-  margin: 2.5rem auto;
-  padding: 0 1.5rem;
+  margin: 2rem auto;
+  padding: 0 2rem;
   display: flex;
   flex-direction: column;
 }
@@ -536,7 +536,7 @@ body {
 .slot-grid-container,
 .reservations-container {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 
@@ -910,6 +910,17 @@ body {
   background: #f8fafc;
   border: 1px dashed #cbd5e1;
   border-radius: var(--radius-md);
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.reservation-qr-image {
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 0.5rem;
 }
 
 .qr-box {
@@ -925,6 +936,43 @@ body {
   color: var(--color-text-secondary);
   margin-top: 0.5rem;
   text-align: center;
+}
+
+/* Cancel Reservation Confirm Dialog */
+.confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1100;
+}
+
+.confirm-dialog {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  animation: scaleUp 0.15s ease-out;
+}
+
+.confirm-dialog p {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 /* Reservations List */
@@ -988,6 +1036,7 @@ body {
 .res-card-footer {
   display: flex;
   justify-content: flex-end;
+  gap: 0.75rem;
   padding-top: 0.75rem;
   border-top: 1px dashed var(--color-border);
 }

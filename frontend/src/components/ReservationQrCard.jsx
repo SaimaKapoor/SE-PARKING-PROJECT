@@ -34,12 +34,6 @@ export default function ReservationQrCard({ reservation, autoGenerate = false })
         <>
           <img className="reservation-qr-image" src={qr.qrCode} alt={`QR code for reservation ${reservation.reservationId}`} />
           <p className="qr-caption">Show this code to staff. Valid until {new Date(qr.expiresAt).toLocaleString()}.</p>
-          <div className="confirmation-summary-box">
-            <p>Reservation: <strong>{qr.reservation.reservationId}</strong></p>
-            <p>Slot: <strong>{qr.reservation.slotId}</strong></p>
-            <p>Vehicle: <strong>{qr.reservation.vehicleId}</strong></p>
-            <p>Parking window: {new Date(qr.reservation.startTime).toLocaleString()} – {new Date(qr.reservation.endTime).toLocaleString()}</p>
-          </div>
           <a className="btn btn-secondary btn-sm" href={qr.qrCode} download={`${qr.reservation.reservationId}-qr.png`}>Download QR</a>
         </>
       )}

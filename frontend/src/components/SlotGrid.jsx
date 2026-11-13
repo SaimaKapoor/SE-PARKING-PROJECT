@@ -212,9 +212,6 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
               >
                 <div className="slot-card-top">
                   <span className="slot-floor-tag">F{slot.floor}</span>
-                  <span className={`status-pill pill-${slot.status.toLowerCase()}`}>
-                    {slot.status}
-                  </span>
                 </div>
 
                 <div className="slot-number-display">{slot.slotNumber}</div>
@@ -233,12 +230,6 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
                   </span>
                   <span className="slot-rate">₹{slot.hourlyRate}/hr</span>
                 </div>
-
-                {isAvailable && (
-                  <div className="slot-action-prompt">
-                    {user ? 'Click to Reserve' : 'Sign in to Reserve'}
-                  </div>
-                )}
               </div>
             );
           })}

@@ -59,8 +59,8 @@ export default function Vehicles({ user }) {
     const errs = {};
     if (!formData.vehicleNumber.trim()) {
       errs.vehicleNumber = 'Vehicle registration number is required';
-    } else if (formData.vehicleNumber.trim().length < 2) {
-      errs.vehicleNumber = 'Registration number must be at least 2 characters';
+    } else if (!/^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{4}$/.test(formData.vehicleNumber.trim())) {
+      errs.vehicleNumber = 'Invalid format. Use Indian plate format, e.g. KA01AB1234';
     }
 
     if (!formData.vehicleType) {

@@ -8,6 +8,7 @@ export default function Reservations({ onNavigateToGrid }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [cancellingId, setCancellingId] = useState(null);
+  const [confirmCancelId, setConfirmCancelId] = useState(null);
   const [qrReservationId, setQrReservationId] = useState(null);
 
   const loadReservations = async () => {
@@ -48,11 +49,12 @@ export default function Reservations({ onNavigateToGrid }) {
     };
   }, []);
 
-  const handleCancel = async (id) => {
-    if (!window.confirm('Are you sure you want to cancel this reservation? The slot will be released.')) {
-      return;
-    }
+  const handleCancel = (id) => {
+    setConfirmCancelId(id);
+  };
 
+  const confirmCancel = async (id) => {
+    setConfirmCancelId(null);
     setCancellingId(id);
     setError('');
     setSuccess('');
@@ -70,6 +72,29 @@ export default function Reservations({ onNavigateToGrid }) {
 
   return (
     <div className="reservations-container">
+      {confirmCancelId && (
+        <div className="confirm-dialog-backdrop">
+          <div className="confirm-dialog">
+            <p>Cancel this reservation? The parking slot will be released.</p>
+            <div className="confirm-dialog-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setConfirmCancelId(null)}
+              >
+                Keep It
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => confirmCancel(confirmCancelId)}
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="reservations-header">
         <div>
           <h2 className="section-title">My Slot Reservations</h2>

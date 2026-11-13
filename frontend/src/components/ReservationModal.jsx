@@ -40,6 +40,8 @@ export default function ReservationModal({ slot, user, onClose, onReservationSuc
 
   const estimatedFee = (slot.hourlyRate || 30) * durationHours;
 
+  const PLATE_REGEX = /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{4}$/;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -48,6 +50,11 @@ export default function ReservationModal({ slot, user, onClose, onReservationSuc
 
     if (!vehicleNumber) {
       setError('Please select or specify a vehicle registration number');
+      return;
+    }
+
+    if (selectedVehicle === '__custom__' && !PLATE_REGEX.test(vehicleNumber)) {
+      setError('Invalid vehicle registration number. Use Indian plate format, e.g. KA01AB1234');
       return;
     }
 
