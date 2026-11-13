@@ -8,10 +8,7 @@ const SERVER_SELECTION_TIMEOUT_MS = 5000;
 const wait = (duration) => new Promise((resolve) => setTimeout(resolve, duration));
 
 export const connectDB = async () => {
-  const mongoURI = process.env.MONGODB_URI;
-  if (!mongoURI) {
-    throw new Error('MONGODB_URI environment variable is not defined.');
-  }
+  const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/vehicle_parking';
 
   let retryDelay = INITIAL_RETRY_DELAY_MS;
   for (let attempt = 1; attempt <= MAX_CONNECTION_ATTEMPTS; attempt += 1) {
