@@ -77,10 +77,17 @@ export default function ReservationModal({ slot, user, onClose, onReservationSuc
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">
-            {confirmedReservation ? 'Reservation Confirmed! 🎉' : `Reserve Slot ${slot.slotNumber}`}
+            {confirmedReservation ? (
+              <>
+                <i className="las la-check-circle" style={{ color: '#10b981', marginRight: '8px' }}></i>
+                Reservation Confirmed
+              </>
+            ) : (
+              `Reserve Slot ${slot.slotNumber}`
+            )}
           </h3>
           <button type="button" className="modal-close-btn" onClick={onClose} aria-label="Close">
-            ✕
+            <i className="las la-times"></i>
           </button>
         </div>
 
@@ -191,7 +198,7 @@ export default function ReservationModal({ slot, user, onClose, onReservationSuc
             {/* Duration Selection */}
             <div className="form-group">
               <label htmlFor="res-duration" className="form-label">
-                Estimated Duration
+                Duration
               </label>
               <select
                 id="res-duration"
@@ -209,7 +216,7 @@ export default function ReservationModal({ slot, user, onClose, onReservationSuc
 
             {/* Cost Preview */}
             <div className="estimate-row">
-              <span>Estimated Amount:</span>
+              <span>Amount:</span>
               <span className="estimate-price">₹{estimatedFee}</span>
             </div>
 

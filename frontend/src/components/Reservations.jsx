@@ -82,7 +82,7 @@ export default function Reservations({ onNavigateToGrid }) {
           className="btn btn-primary btn-sm"
           onClick={onNavigateToGrid}
         >
-          + Book Another Slot
+          <i className="las la-plus" style={{ marginRight: '6px' }}></i> Book Another Slot
         </button>
       </div>
 
@@ -96,7 +96,9 @@ export default function Reservations({ onNavigateToGrid }) {
         </div>
       ) : reservations.length === 0 ? (
         <div className="empty-state card">
-          <div className="empty-icon">🅿️</div>
+          <div className="empty-icon">
+            <i className="las la-parking" style={{ fontSize: '3.5rem', color: '#94a3b8' }}></i>
+          </div>
           <h3>No Reservations Found</h3>
           <p>You haven't reserved any parking slots yet.</p>
           <button
@@ -104,7 +106,7 @@ export default function Reservations({ onNavigateToGrid }) {
             className="btn btn-primary mt-3"
             onClick={onNavigateToGrid}
           >
-            Browse Available Slots
+            <i className="las la-th-large" style={{ marginRight: '6px' }}></i> Browse Available Slots
           </button>
         </div>
       ) : (
@@ -156,7 +158,15 @@ export default function Reservations({ onNavigateToGrid }) {
                   <>
                   <div className="res-card-footer">
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => setQrReservationId(qrReservationId === res._id ? null : res._id)}>
-                      {qrReservationId === res._id ? 'Hide QR' : 'View QR'}
+                      {qrReservationId === res._id ? (
+                        <>
+                          <i className="las la-eye-slash" style={{ marginRight: '4px' }}></i> Hide QR
+                        </>
+                      ) : (
+                        <>
+                          <i className="las la-qrcode" style={{ marginRight: '4px' }}></i> View QR
+                        </>
+                      )}
                     </button>
                     <button
                       type="button"
@@ -164,9 +174,13 @@ export default function Reservations({ onNavigateToGrid }) {
                       onClick={() => handleCancel(res._id || res.reservationId)}
                       disabled={cancellingId === (res._id || res.reservationId)}
                     >
-                      {cancellingId === (res._id || res.reservationId)
-                        ? 'Cancelling...'
-                        : 'Cancel Reservation'}
+                      {cancellingId === (res._id || res.reservationId) ? (
+                        'Cancelling...'
+                      ) : (
+                        <>
+                          <i className="las la-times-circle" style={{ marginRight: '4px' }}></i> Cancel Reservation
+                        </>
+                      )}
                     </button>
                   </div>
                   {qrReservationId === res._id && <ReservationQrCard reservation={res} />}

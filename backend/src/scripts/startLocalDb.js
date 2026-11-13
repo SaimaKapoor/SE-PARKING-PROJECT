@@ -1,24 +1,31 @@
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 
 console.log('Starting local MongoDB server for development and manual verification...');
 
 try {
-  const mongo = await MongoMemoryServer.create({
-    instance: {
-      port: 27017,
+  const replSet = await MongoMemoryReplSet.create({
+    instanceOpts: [
+      {
+        port: 27017,
+      },
+    ],
+    replSet: {
+      count: 1,
       dbName: 'vehicle_parking',
+      storageEngine: 'wiredTiger',
     },
   });
 
   console.log(`\n========================================`);
-  console.log(`MongoDB local server ready on port 27017`);
+  console.log(`MongoDB local replica set ready on port 27017`);
   console.log(`URI: mongodb://127.0.0.1:27017/vehicle_parking`);
+  console.log(`ACID Multi-Document Transactions: ENABLED`);
   console.log(`========================================\n`);
   console.log('Press Ctrl+C to terminate MongoDB.');
 
   const shutdown = async () => {
     console.log('\nStopping local MongoDB server...');
-    await mongo.stop();
+    await replSet.stop();
     process.exit(0);
   };
 

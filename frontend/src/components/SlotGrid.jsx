@@ -8,7 +8,6 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
   const [floorFilter, setFloorFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [hoveredSlot, setHoveredSlot] = useState(null);
 
   const loadSlots = async () => {
     setLoading(true);
@@ -88,7 +87,13 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
           onClick={loadSlots}
           disabled={loading}
         >
-          {loading ? 'Refreshing...' : '↻ Refresh Grid'}
+          {loading ? (
+            'Refreshing...'
+          ) : (
+            <>
+              <i className="las la-sync-alt" style={{ marginRight: '6px' }}></i> Refresh Grid
+            </>
+          )}
         </button>
       </div>
 
@@ -201,8 +206,6 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
                 key={slot._id || slot.slotNumber}
                 className={`slot-card ${statusClass} ${isAvailable ? 'clickable' : 'disabled'}`}
                 onClick={() => handleSlotClick(slot)}
-                onMouseEnter={() => setHoveredSlot(slot)}
-                onMouseLeave={() => setHoveredSlot(null)}
                 role="button"
                 tabIndex={isAvailable ? 0 : -1}
                 aria-label={`Slot ${slot.slotNumber}, Floor ${slot.floor}, Status ${slot.status}`}
@@ -218,7 +221,15 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
 
                 <div className="slot-card-bottom">
                   <span className="slot-type-badge">
-                    {slot.type === '2-wheeler' ? '🏍️ 2W' : '🚗 4W'}
+                    {slot.type === '2-wheeler' ? (
+                      <>
+                        <i className="las la-motorcycle" style={{ marginRight: '4px' }}></i> 2W
+                      </>
+                    ) : (
+                      <>
+                        <i className="las la-car" style={{ marginRight: '4px' }}></i> 4W
+                      </>
+                    )}
                   </span>
                   <span className="slot-rate">₹{slot.hourlyRate}/hr</span>
                 </div>
@@ -231,30 +242,6 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Hover Detail Card / Tooltip Info */}
-      {hoveredSlot && (
-        <div className="hover-details-strip">
-          <div className="hover-detail-item">
-            <strong>Slot:</strong> {hoveredSlot.slotNumber}
-          </div>
-          <div className="hover-detail-item">
-            <strong>Level:</strong> Floor {hoveredSlot.floor}
-          </div>
-          <div className="hover-detail-item">
-            <strong>Type:</strong> {hoveredSlot.type}
-          </div>
-          <div className="hover-detail-item">
-            <strong>Rate:</strong> ₹{hoveredSlot.hourlyRate}/hr
-          </div>
-          <div className="hover-detail-item">
-            <strong>Status:</strong>{' '}
-            <span className={`status-inline-${hoveredSlot.status.toLowerCase()}`}>
-              {hoveredSlot.status}
-            </span>
-          </div>
         </div>
       )}
     </div>
