@@ -4,6 +4,7 @@ dotenv.config();
 import app from './app.js';
 import { connectDB } from './config/db.js';
 import { seedParkingSlots } from './config/seedSlots.js';
+import { seedDemoUsers } from './scripts/seed.js';
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -12,6 +13,7 @@ const startServer = async () => {
   try {
     await connectDB();
     await seedParkingSlots(false);
+    await seedDemoUsers(false);
 
     app.listen(PORT, HOST, () => {
       console.log(`Server running on port ${PORT}`);
