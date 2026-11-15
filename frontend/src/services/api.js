@@ -209,6 +209,20 @@ export const validateReservationQr = async (token) => apiFetch('/api/qr/validate
 
 export const fetchActiveSessions = async () => apiFetch('/api/sessions/active', { method: 'GET' });
 
+export const mockCheckoutSession = async (reservationId) => apiFetch('/api/sessions/mock-checkout', {
+  method: 'POST',
+  body: JSON.stringify({ reservationId }),
+});
+
+export const processPayment = async (sessionId, outcome = 'success') => apiFetch('/api/payments', {
+  method: 'POST',
+  body: JSON.stringify({ sessionId, outcome }),
+});
+
+export const fetchAdminReservations = async () => apiFetch('/api/admin/reservations', { method: 'GET' });
+
+export const fetchAdminVehicles = async () => apiFetch('/api/admin/vehicles', { method: 'GET' });
+
 export const recordStaffEntry = async (reservationId) => apiFetch('/api/sessions/staff/entry', {
   method: 'POST',
   body: JSON.stringify({ reservationId }),

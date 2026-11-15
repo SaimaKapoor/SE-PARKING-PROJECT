@@ -51,22 +51,26 @@ export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout
                   QR Scanner
                 </button>
               )}
-              <button
-                type="button"
-                className={`nav-link ${activeTab === 'reservations' ? 'active' : ''}`}
-                onClick={() => onSelectTab('reservations')}
-              >
-                <i className="las la-calendar-check" style={{ marginRight: '6px' }}></i>
-                My Reservations
-              </button>
-              <button
-                type="button"
-                className={`nav-link ${activeTab === 'vehicles' ? 'active' : ''}`}
-                onClick={() => onSelectTab('vehicles')}
-              >
-                <i className="las la-car" style={{ marginRight: '6px' }}></i>
-                My Vehicles
-              </button>
+              {!isAdmin && (
+                <button
+                  type="button"
+                  className={`nav-link ${activeTab === 'reservations' ? 'active' : ''}`}
+                  onClick={() => onSelectTab('reservations')}
+                >
+                  <i className="las la-calendar-check" style={{ marginRight: '6px' }}></i>
+                  My Reservations
+                </button>
+              )}
+              {!isAdmin && (
+                <button
+                  type="button"
+                  className={`nav-link ${activeTab === 'vehicles' ? 'active' : ''}`}
+                  onClick={() => onSelectTab('vehicles')}
+                >
+                  <i className="las la-car" style={{ marginRight: '6px' }}></i>
+                  My Vehicles
+                </button>
+              )}
               <div className="user-profile">
                 <i className="las la-user-circle" style={{ marginRight: '4px', fontSize: '1.1rem' }}></i>
                 <span className="user-name">{user.name}</span>

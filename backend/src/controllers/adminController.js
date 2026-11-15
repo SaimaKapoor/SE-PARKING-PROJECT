@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import ParkingSession from '../models/ParkingSession.js';
 import ParkingSlot from '../models/ParkingSlot.js';
 import Payment from '../models/Payment.js';
+import Reservation from '../models/Reservation.js';
+import Vehicle from '../models/Vehicle.js';
 
 const PAYMENT_STATUSES = ['SUCCESS', 'FAILED'];
 const MAX_PAGE_SIZE = 100;
@@ -106,5 +108,32 @@ export async function getAdminTransactionRecords(req, res) {
   } catch (error) {
     console.error('Admin transaction records error:', error.message);
     return res.status(500).json({ success: false, message: 'Could not retrieve transaction records' });
+  }
+}
+
+export async function getAdminReservations(req, res) {
+  try {
+    const reservations = await Reservation.find({})
+      .populate('userId', 'name email')
+      .populate('slot')
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.status(200).json({ success: true, data: { reservations } });
+  } catch (error) {
+    console.error('Admin reservations error:', error.message);
+    return res.status(500).json({ success: false, message: 'Could not retrieve reservations' });
+  }
+}
+
+export async function getAdminVehicles(req, res) {
+  try {
+    const vehicles = await Vehicle.find({})
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.status(200).json({ success: true, data: { vehicles } });
+  } catch (error) {
+    console.error('Admin vehicles error:', error.message);
+    return res.status(500).json({ success: false, message: 'Could not retrieve vehicles' });
   }
 }

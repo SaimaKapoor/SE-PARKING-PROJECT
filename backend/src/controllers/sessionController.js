@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import QRCode from 'qrcode';
 import ParkingSession from '../models/ParkingSession.js';
 import ParkingSlot from '../models/ParkingSlot.js';
 import Payment from '../models/Payment.js';
@@ -199,5 +200,65 @@ export async function recordStaffExit(req, res) {
   } catch (error) {
     console.error('Staff exit error:', error.message);
     return res.status(500).json({ success: false, message: 'Could not record vehicle exit' });
+  }
+}
+
+export async function mockCheckout(req, res) {
+  try {
+    const { reservationId } = req.body;
+    if (!reservationId) {
+      return res.status(400).json({ success: false, message: 'reservationId is required' });
+    }
+    const reservation = await Reservation.findOne({
+      $or: [
+        { reservationId: String(reservationId).toUpperCase() },
+        ...(mongoose.isValidObjectId(reservationId) ? [{ _id: reservationId }] : []),
+      ],
+    });
+    if (!reservation) return res.status(404).json({ success: false, message: 'Reservation not found' });
+    if (reservation.status !== 'CONFIRMED') {
+      return res.status(409).json({ success: false, message: 'Reservation is not in CONFIRMED status' });
+    }
+
+    // Return existing session if already created
+    const existing = await ParkingSession.findOne({
+      reservationId: reservation.reservationId,
+      status: { $in: ['ACTIVE', 'AWAITING_PAYMENT'] },
+    });
+    if (existing) {
+      const existingUri = `upi://pay?pa=smartparking@okaxis&pn=Smart%20Parking%20System&am=${existing.fee || 30}&tr=${existing._id}&cu=INR`;
+      const upiQrCode = await QRCode.toDataURL(existingUri, { errorCorrectionLevel: 'M', width: 220 });
+      return res.status(200).json({ success: true, message: 'Session already exists', data: { session: existing, upiQrCode, fee: existing.fee } });
+    }
+
+    const slot = await ParkingSlot.findOne({ $or: [{ _id: reservation.slot }, { slotNumber: reservation.slotId }] });
+    const hourlyRate = slot ? Number(slot.hourlyRate) : getHourlyRate();
+    const entryTime = reservation.startTime || new Date();
+    const exitTime = reservation.endTime || new Date();
+    const durationMinutes = Math.max(60, Math.ceil((exitTime - entryTime) / 60000));
+    const fee = calculateParkingFee(durationMinutes, hourlyRate);
+
+    const session = await ParkingSession.create({
+      customerId: reservation.userId,
+      reservationId: reservation.reservationId,
+      vehicleId: reservation.vehicleId,
+      slotId: reservation.slotId,
+      entryTime,
+      exitTime,
+      durationMinutes,
+      durationHours: Math.ceil(durationMinutes / 60),
+      hourlyRate,
+      fee,
+      status: 'AWAITING_PAYMENT',
+      paymentStatus: 'PENDING',
+    });
+
+    const upiUri = `upi://pay?pa=smartparking@okaxis&pn=Smart%20Parking%20System&am=${fee}&tr=${session._id}&cu=INR`;
+    const upiQrCode = await QRCode.toDataURL(upiUri, { errorCorrectionLevel: 'M', width: 220 });
+
+    return res.status(201).json({ success: true, message: 'Mock checkout session created', data: { session, upiQrCode, fee } });
+  } catch (error) {
+    console.error('Mock checkout error:', error.message);
+    return res.status(500).json({ success: false, message: 'Could not create mock checkout session' });
   }
 }

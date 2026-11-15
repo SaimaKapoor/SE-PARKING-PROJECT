@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAdminTransactionRecords } from '../controllers/adminController.js';
+import { getAdminTransactionRecords, getAdminReservations, getAdminVehicles } from '../controllers/adminController.js';
 import {
   createAdminSlot,
   deleteAdminSlot,
@@ -14,6 +14,8 @@ const router = Router();
 
 router.use(requireAuth, authorize('admin'));
 router.get('/transactions', getAdminTransactionRecords);
+router.get('/reservations', getAdminReservations);
+router.get('/vehicles', getAdminVehicles);
 router.get('/slots', getSlots);
 router.post('/slots', createAdminSlot);
 router.get('/slots/:id', getSlotById);
