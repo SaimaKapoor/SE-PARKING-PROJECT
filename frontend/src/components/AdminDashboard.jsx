@@ -70,20 +70,35 @@ export default function AdminDashboard({ onManageSlots }) {
   }, [page, status, from, to]);
 
   useEffect(() => {
-    if (activeSection === 'reservations' && allReservations.length === 0) {
-      setResLoading(true);
-      fetchAdminReservations()
-        .then((r) => setAllReservations(r.data?.reservations || []))
-        .catch(() => {})
-        .finally(() => setResLoading(false));
+    let ignore = false;
+
+    async function loadTabData() {
+      if (activeSection === 'reservations' && allReservations.length === 0) {
+        setResLoading(true);
+        try {
+          const r = await fetchAdminReservations();
+          if (!ignore) setAllReservations(r.data?.reservations || []);
+        } catch {
+          // ignore error
+        } finally {
+          if (!ignore) setResLoading(false);
+        }
+      }
+      if (activeSection === 'vehicles' && allVehicles.length === 0) {
+        setVehLoading(true);
+        try {
+          const v = await fetchAdminVehicles();
+          if (!ignore) setAllVehicles(v.data?.vehicles || []);
+        } catch {
+          // ignore error
+        } finally {
+          if (!ignore) setVehLoading(false);
+        }
+      }
     }
-    if (activeSection === 'vehicles' && allVehicles.length === 0) {
-      setVehLoading(true);
-      fetchAdminVehicles()
-        .then((r) => setAllVehicles(r.data?.vehicles || []))
-        .catch(() => {})
-        .finally(() => setVehLoading(false));
-    }
+
+    loadTabData();
+    return () => { ignore = true; };
   }, [activeSection, allReservations.length, allVehicles.length]);
 
   const slotCount = (slotStatus) => slots.filter((slot) => slot.status === slotStatus).length;
