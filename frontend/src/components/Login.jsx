@@ -112,6 +112,33 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }) {
         </button>
       </form>
 
+      <div className="demo-accounts-box">
+        <p className="demo-accounts-title">Quick Demo Logins (Password: Password123):</p>
+        <div className="demo-accounts-buttons">
+          <button
+            type="button"
+            className="demo-pill-btn"
+            onClick={() => setFormData({ email: 'staff@parking.com', password: 'Password123' })}
+          >
+            Gate Staff
+          </button>
+          <button
+            type="button"
+            className="demo-pill-btn"
+            onClick={() => setFormData({ email: 'admin@parking.com', password: 'Password123' })}
+          >
+            Admin
+          </button>
+          <button
+            type="button"
+            className="demo-pill-btn"
+            onClick={() => setFormData({ email: 'customer@parking.com', password: 'Password123' })}
+          >
+            Customer
+          </button>
+        </div>
+      </div>
+
       <div className="card-footer">
         <span>Don't have an account?</span>{' '}
         <button

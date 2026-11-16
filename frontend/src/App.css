@@ -1458,3 +1458,45 @@ body {
   max-width: 320px;
   line-height: 1.4;
 }
+
+/* Demo Accounts Quick Login Box */
+.demo-accounts-box {
+  margin-top: 1.25rem;
+  padding: 0.85rem 1rem;
+  background-color: var(--color-bg-page);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.demo-accounts-title {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.demo-accounts-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.demo-pill-btn {
+  background: var(--color-white);
+  border: 1px solid var(--color-border-input);
+  border-radius: 9999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.demo-pill-btn:hover {
+  background: var(--color-black);
+  color: var(--color-white);
+  border-color: var(--color-black);
+}

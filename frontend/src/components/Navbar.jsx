@@ -4,12 +4,12 @@ export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout
       <div className="navbar-container">
         <div
           className="navbar-brand"
-          onClick={() => onSelectTab('slots')}
+          onClick={() => onSelectTab(user ? (isAdmin ? 'admin' : (isStaff ? 'scanner' : 'slots')) : 'login')}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
-              onSelectTab('slots');
+              onSelectTab(user ? (isAdmin ? 'admin' : (isStaff ? 'scanner' : 'slots')) : 'login');
             }
           }}
         >
@@ -20,17 +20,16 @@ export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout
         </div>
 
         <nav className="navbar-menu">
-          <button
-            type="button"
-            className={`nav-link ${activeTab === 'slots' ? 'active' : ''}`}
-            onClick={() => onSelectTab('slots')}
-          >
-            <i className="las la-th-large" style={{ marginRight: '6px' }}></i>
-            Parking Slots
-          </button>
-
           {user ? (
             <>
+              <button
+                type="button"
+                className={`nav-link ${activeTab === 'slots' ? 'active' : ''}`}
+                onClick={() => onSelectTab('slots')}
+              >
+                <i className="las la-th-large" style={{ marginRight: '6px' }}></i>
+                Parking Slots
+              </button>
               {isAdmin && (
                 <button
                   type="button"

@@ -15,7 +15,13 @@ import './App.css';
 export default function App() {
   const [user, setUser] = useState(() => getUser());
   const [profileChecked, setProfileChecked] = useState(() => !getUser());
-  const [activeTab, setActiveTab] = useState('slots');
+  const [activeTab, setActiveTab] = useState(() => {
+    const existing = getUser();
+    if (!existing) return 'login';
+    if (existing.role === 'admin') return 'admin';
+    if (existing.role === 'staff') return 'scanner';
+    return 'slots';
+  });
   const [selectedSlotForReservation, setSelectedSlotForReservation] = useState(null);
   const [pendingSlotForReservation, setPendingSlotForReservation] = useState(null);
   const isAdmin = profileChecked && user?.role === 'admin';
@@ -30,13 +36,15 @@ export default function App() {
           const verifiedUser = response.data.user;
           setUser(verifiedUser);
           if (verifiedUser.role === 'admin') setActiveTab('admin');
+          else if (verifiedUser.role === 'staff') setActiveTab('scanner');
+          else setActiveTab('slots');
         }
         setProfileChecked(true);
       } catch {
         // Token expired or invalid
         clearAuth();
         setUser(null);
-        setActiveTab('slots');
+        setActiveTab('login');
         setProfileChecked(true);
       }
     };
@@ -49,7 +57,7 @@ export default function App() {
   const handleLoginSuccess = (loggedInUser) => {
     setUser(loggedInUser);
     setProfileChecked(true);
-    setActiveTab(loggedInUser.role === 'admin' ? 'admin' : 'slots');
+    setActiveTab(loggedInUser.role === 'admin' ? 'admin' : (loggedInUser.role === 'staff' ? 'scanner' : 'slots'));
     if (pendingSlotForReservation) {
       setSelectedSlotForReservation(pendingSlotForReservation);
       setPendingSlotForReservation(null);
@@ -64,10 +72,14 @@ export default function App() {
     clearAuth();
     setUser(null);
     setProfileChecked(true);
-    setActiveTab('slots');
+    setActiveTab('login');
   };
 
   const handleSelectTab = (tab) => {
+    if (!user && !['login', 'register'].includes(tab)) {
+      setActiveTab('login');
+      return;
+    }
     if (tab === 'admin' && !isAdmin) return;
     if (tab === 'scanner' && !isStaff) return;
     setActiveTab(tab);
@@ -76,7 +88,7 @@ export default function App() {
   const handleSelectSlot = (slot) => {
     if (!user) {
       setPendingSlotForReservation(slot);
-      setActiveTab('register');
+      setActiveTab('login');
       return;
     }
     setSelectedSlotForReservation(slot);
@@ -98,28 +110,28 @@ export default function App() {
       />
 
       <main className="main-content">
-        {activeTab === 'slots' && (
-          <SlotGrid
-            user={user}
-            onSelectSlot={handleSelectSlot}
-            onLoginPrompt={(slot) => {
-              setPendingSlotForReservation(slot);
-              setActiveTab('register');
-            }}
+        {!user && activeTab === 'register' && (
+          <Register
+            onSwitchToLogin={() => setActiveTab('login')}
+            onRegistrationSuccess={handleRegisterSuccess}
           />
         )}
 
-        {!user && activeTab === 'login' && (
+        {!user && activeTab !== 'register' && (
           <Login
             onLoginSuccess={handleLoginSuccess}
             onSwitchToRegister={() => setActiveTab('register')}
           />
         )}
 
-        {!user && activeTab === 'register' && (
-          <Register
-            onSwitchToLogin={() => setActiveTab('login')}
-            onRegistrationSuccess={handleRegisterSuccess}
+        {user && activeTab === 'slots' && (
+          <SlotGrid
+            user={user}
+            onSelectSlot={handleSelectSlot}
+            onLoginPrompt={(slot) => {
+              setPendingSlotForReservation(slot);
+              setActiveTab('login');
+            }}
           />
         )}
 
