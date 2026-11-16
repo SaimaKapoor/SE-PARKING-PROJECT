@@ -13,6 +13,7 @@ export default function StaffQrScanner() {
   const [success, setSuccess] = useState('');
   const [actionLoading, setActionLoading] = useState('');
   const [lastSession, setLastSession] = useState(null);
+  const [manualCode, setManualCode] = useState('');
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
@@ -42,11 +43,30 @@ export default function StaffQrScanner() {
       try {
         const response = await validateReservationQr(decodedText);
         setResult(response.data.reservation);
-        await scanner.pause(true);
+        try {
+          if (scanner && typeof scanner.pause === 'function') {
+            await scanner.pause(true);
+          }
+        } catch {
+          // Scanner may not be streaming video (e.g. image drop / file upload)
+        }
       } catch (err) {
-        setResult(null);
-        setError(err.message || 'QR validation failed');
-        try { await scanner.pause(true); } catch { /* scanner may already be stopped */ }
+        if (err.data?.data?.reservation) {
+          setResult(err.data.data.reservation);
+          setError('');
+          setSuccess('Reservation previously verified. Ready to record vehicle entry.');
+        } else {
+          setResult(null);
+          const errMsg = err.data?.message || err.message || (typeof err === 'string' ? err : 'QR validation failed');
+          setError(errMsg);
+        }
+        try {
+          if (scanner && typeof scanner.pause === 'function') {
+            await scanner.pause(true);
+          }
+        } catch {
+          // ignore
+        }
       } finally {
         setScanning(false);
       }
@@ -88,8 +108,35 @@ export default function StaffQrScanner() {
     }
   };
 
+  const handleManualVerify = async (e) => {
+    if (e) e.preventDefault();
+    const code = manualCode.trim();
+    if (!code) return;
+    setScanning(true);
+    setError('');
+    setActionError('');
+    setSuccess('');
+    try {
+      const response = await validateReservationQr(code);
+      setResult(response.data.reservation);
+    } catch (err) {
+      if (err.data?.data?.reservation) {
+        setResult(err.data.data.reservation);
+        setError('');
+        setSuccess('Reservation previously verified. Ready to record vehicle entry.');
+      } else {
+        setResult(null);
+        const errMsg = err.data?.message || err.message || (typeof err === 'string' ? err : 'QR validation failed');
+        setError(errMsg);
+      }
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const startAnotherScan = () => {
     setResult(null);
+    setManualCode('');
     setError('');
     setActionError('');
     setSuccess('');
@@ -132,6 +179,30 @@ export default function StaffQrScanner() {
           <button type="button" className="btn btn-secondary btn-sm" onClick={startAnotherScan} disabled={Boolean(actionLoading)}>Scan another QR</button>
         </div>}
         {error && <button type="button" className="btn btn-primary btn-sm" onClick={startAnotherScan}>Scan another QR</button>}
+
+        <form onSubmit={handleManualVerify} style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid #e2e8f0' }}>
+          <label htmlFor="manual-code-input" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#334155', marginBottom: '0.5rem' }}>
+            Or verify by Reservation ID / Code:
+          </label>
+          <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '480px' }}>
+            <input
+              id="manual-code-input"
+              type="text"
+              className="form-control"
+              placeholder="e.g. RES-8TOP41DDDD"
+              value={manualCode}
+              onChange={(e) => setManualCode(e.target.value)}
+              disabled={scanning}
+            />
+            <button
+              type="submit"
+              className="btn btn-secondary"
+              disabled={!manualCode.trim() || scanning}
+            >
+              {scanning ? 'Verifying…' : 'Verify'}
+            </button>
+          </div>
+        </form>
       </section>
 
       <section className="card">

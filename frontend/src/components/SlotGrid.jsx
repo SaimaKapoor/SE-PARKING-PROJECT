@@ -60,8 +60,10 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
   const availableCount = slots.filter((s) => s.status === 'AVAILABLE').length;
   const reservedCount = slots.filter((s) => s.status === 'RESERVED').length;
   const occupiedCount = slots.filter((s) => s.status === 'OCCUPIED').length;
+  const isReadOnly = Boolean(user && (user.role === 'admin' || user.role === 'staff'));
 
   const handleSlotClick = (slot) => {
+    if (isReadOnly) return;
     if (!user) {
       if (onLoginPrompt) onLoginPrompt(slot);
       return;
@@ -78,7 +80,9 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
         <div>
           <h2 className="section-title">Live Parking Slot Availability</h2>
           <p className="section-subtitle">
-            Real-time occupancy status across all parking levels. Click any available slot to reserve.
+            {isReadOnly
+              ? 'Real-time occupancy status across all parking levels (Read-only view).'
+              : 'Real-time occupancy status across all parking levels. Click any available slot to reserve.'}
           </p>
         </div>
         <button
@@ -196,6 +200,7 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
             const isAvailable = slot.status === 'AVAILABLE';
             const isReserved = slot.status === 'RESERVED';
             const isOccupied = slot.status === 'OCCUPIED';
+            const isClickable = isAvailable && !isReadOnly;
 
             let statusClass = 'slot-card-available';
             if (isReserved) statusClass = 'slot-card-reserved';
@@ -204,11 +209,12 @@ export default function SlotGrid({ user, onSelectSlot, onLoginPrompt }) {
             return (
               <div
                 key={slot._id || slot.slotNumber}
-                className={`slot-card ${statusClass} ${isAvailable ? 'clickable' : 'disabled'}`}
+                className={`slot-card ${statusClass} ${isClickable ? 'clickable' : 'read-only'}`}
                 onClick={() => handleSlotClick(slot)}
                 role="button"
-                tabIndex={isAvailable ? 0 : -1}
+                tabIndex={isClickable ? 0 : -1}
                 aria-label={`Slot ${slot.slotNumber}, Floor ${slot.floor}, Status ${slot.status}`}
+                style={isReadOnly ? { cursor: 'default' } : undefined}
               >
                 <div className="slot-card-top">
                   <span className="slot-floor-tag">F{slot.floor}</span>

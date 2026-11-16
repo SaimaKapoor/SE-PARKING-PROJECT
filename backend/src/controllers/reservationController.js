@@ -22,6 +22,13 @@ function generateReservationId() {
  */
 export async function createReservation(req, res) {
   try {
+    if (req.user && ['admin', 'staff'].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Administrators and gate staff cannot book parking slots. Slots are read-only.',
+      });
+    }
+
     const rawSlotId = req.body.slotId || req.body.slotNumber;
     if (!rawSlotId) {
       return res.status(400).json({

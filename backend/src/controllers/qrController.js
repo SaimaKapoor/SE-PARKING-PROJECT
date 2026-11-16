@@ -30,13 +30,19 @@ export async function generateReservationQr(req, res) {
       return res.status(409).json({ success: false, message: 'Reservation is not active and cannot receive a QR code' });
     }
     if (reservation.qrUsedAt) {
-      return res.status(409).json({ success: false, message: 'This reservation QR has already been used' });
+      const activeSession = await mongoose.model('ParkingSession').findOne({
+        reservationId: reservation.reservationId,
+        status: { $in: ['ACTIVE', 'COMPLETED'] },
+      });
+      if (activeSession) {
+        return res.status(409).json({ success: false, message: 'This reservation QR has already been used for parking entry' });
+      }
     }
 
     const token = randomUUID();
     const expiresAt = new Date(Math.min(now.getTime() + TOKEN_LIFETIME_MS, reservation.endTime.getTime()));
     const updated = await Reservation.findOneAndUpdate(
-      { _id: reservation._id, userId: req.user._id, status: 'CONFIRMED', endTime: { $gt: now }, qrUsedAt: { $exists: false } },
+      { _id: reservation._id, userId: req.user._id, status: 'CONFIRMED', endTime: { $gt: now } },
       { $set: { qrToken: token, qrExpiresAt: expiresAt }, $unset: { qrUsedAt: 1 } },
       { new: true }
     );
@@ -67,19 +73,24 @@ export async function generateReservationQr(req, res) {
 }
 
 export async function validateReservationQr(req, res) {
-  const token = typeof req.body.token === 'string' ? req.body.token.trim() : '';
-  if (!token || token.length > 100) {
+  const input = typeof req.body.token === 'string'
+    ? req.body.token.trim()
+    : (typeof req.body.reservationId === 'string' ? req.body.reservationId.trim() : '');
+  if (!input || input.length > 100) {
     await recordSecurityEvent(req, { eventType: 'QR_VALIDATION_FAILED', userId: req.user._id, reason: 'invalid_token' });
-    return res.status(400).json({ success: false, message: 'A valid QR token is required' });
+    return res.status(400).json({ success: false, message: 'A valid QR token or reservation ID is required' });
   }
   try {
     const now = new Date();
+    const isResCode = input.toUpperCase().startsWith('RES-');
+    const query = isResCode ? { reservationId: input.toUpperCase() } : { qrToken: input };
+
     const reservation = await Reservation.findOneAndUpdate(
       {
-        qrToken: token,
+        ...query,
         status: 'CONFIRMED',
         endTime: { $gt: now },
-        qrExpiresAt: { $gt: now },
+        ...(isResCode ? {} : { qrExpiresAt: { $gt: now } }),
         qrUsedAt: { $exists: false },
       },
       { $set: { qrUsedAt: now } },
@@ -87,7 +98,7 @@ export async function validateReservationQr(req, res) {
     ).populate('slot');
 
     if (!reservation) {
-      const existing = await Reservation.findOne({ qrToken: token }).select('+qrToken');
+      const existing = await Reservation.findOne(query).select('+qrToken');
       const reason = !existing
         ? 'invalid_token'
         : existing.qrUsedAt
@@ -101,6 +112,17 @@ export async function validateReservationQr(req, res) {
         success: false,
         message: reused ? 'This QR code has already been used' : 'QR code is invalid, expired, or no longer active',
         reason,
+        data: reused && existing ? {
+          reservation: {
+            reservationId: existing.reservationId,
+            slotId: existing.slotId,
+            vehicleId: existing.vehicleId,
+            startTime: existing.startTime,
+            endTime: existing.endTime,
+            status: existing.status,
+            alreadyValidated: true,
+          },
+        } : undefined,
       });
     }
 

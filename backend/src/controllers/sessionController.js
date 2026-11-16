@@ -156,7 +156,26 @@ export async function recordStaffEntry(req, res) {
       $or: [{ reservationId: reservation.reservationId }, { slotId: reservation.slotId }],
       status: { $in: ['ACTIVE', 'AWAITING_PAYMENT'] },
     });
-    if (duplicate) return res.status(409).json({ success: false, message: 'An active session already exists for this reservation or slot' });
+    if (duplicate) {
+      if (duplicate.status === 'ACTIVE') {
+        return res.status(409).json({ success: false, message: 'An active session already exists for this reservation or slot' });
+      }
+      if (duplicate.reservationId === reservation.reservationId && duplicate.status === 'AWAITING_PAYMENT') {
+        duplicate.status = 'ACTIVE';
+        duplicate.entryTime = now;
+        await duplicate.save();
+
+        const slot = await ParkingSlot.findOne({ $or: [{ _id: reservation.slot }, { slotId: reservation.slotId }] });
+        if (slot) {
+          slot.status = 'OCCUPIED';
+          slot.currentReservationId = null;
+          slot.currentSessionId = duplicate._id;
+          await slot.save();
+        }
+        return res.status(200).json({ success: true, message: 'Vehicle entry recorded', data: { session: duplicate } });
+      }
+      return res.status(409).json({ success: false, message: 'An active session already exists for this reservation or slot' });
+    }
 
     const slot = await ParkingSlot.findOne({ $or: [{ _id: reservation.slot }, { slotId: reservation.slotId }] });
     if (!slot) return res.status(404).json({ success: false, message: 'Reserved parking slot not found' });

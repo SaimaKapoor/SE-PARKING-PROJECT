@@ -82,6 +82,7 @@ export default function App() {
     }
     if (tab === 'admin' && !isAdmin) return;
     if (tab === 'scanner' && !isStaff) return;
+    if (['reservations', 'vehicles'].includes(tab) && (isAdmin || isStaff)) return;
     setActiveTab(tab);
   };
 
@@ -89,6 +90,9 @@ export default function App() {
     if (!user) {
       setPendingSlotForReservation(slot);
       setActiveTab('login');
+      return;
+    }
+    if (user.role === 'admin' || user.role === 'staff') {
       return;
     }
     setSelectedSlotForReservation(slot);

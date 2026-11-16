@@ -50,7 +50,7 @@ export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout
                   QR Scanner
                 </button>
               )}
-              {!isAdmin && (
+              {!isAdmin && !isStaff && (
                 <button
                   type="button"
                   className={`nav-link ${activeTab === 'reservations' ? 'active' : ''}`}
@@ -60,7 +60,7 @@ export default function Navbar({ user, isAdmin, activeTab, onSelectTab, onLogout
                   My Reservations
                 </button>
               )}
-              {!isAdmin && (
+              {!isAdmin && !isStaff && (
                 <button
                   type="button"
                   className={`nav-link ${activeTab === 'vehicles' ? 'active' : ''}`}
