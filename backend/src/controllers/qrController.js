@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import Reservation from '../models/Reservation.js';
 import { recordSecurityEvent } from '../services/securityEventLogger.js';
 
+const TOKEN_LIFETIME_MS = 15 * 60 * 1000;
+
 function reservationQuery(identifier) {
   return mongoose.isValidObjectId(identifier)
     ? { _id: identifier }
@@ -32,8 +34,7 @@ export async function generateReservationQr(req, res) {
     }
 
     const token = randomUUID();
-    // The QR remains valid for the full confirmed reservation window.
-    const expiresAt = reservation.endTime;
+    const expiresAt = new Date(Math.min(now.getTime() + TOKEN_LIFETIME_MS, reservation.endTime.getTime()));
     const updated = await Reservation.findOneAndUpdate(
       { _id: reservation._id, userId: req.user._id, status: 'CONFIRMED', endTime: { $gt: now }, qrUsedAt: { $exists: false } },
       { $set: { qrToken: token, qrExpiresAt: expiresAt }, $unset: { qrUsedAt: 1 } },

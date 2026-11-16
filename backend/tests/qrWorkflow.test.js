@@ -58,7 +58,6 @@ describe('Reservation QR workflow', () => {
     expect(second.status).toBe(201);
     expect(current.qrToken).not.toBe(firstToken);
     expect(current.qrExpiresAt.getTime()).toBeGreaterThan(Date.now());
-    expect(current.qrExpiresAt.getTime()).toBe(reservation.endTime.getTime());
     const oldValidation = await request.post('/api/qr/validate').set('Authorization', `Bearer ${staffToken}`).send({ token: firstToken });
     expect(oldValidation.status).toBe(400);
   });
