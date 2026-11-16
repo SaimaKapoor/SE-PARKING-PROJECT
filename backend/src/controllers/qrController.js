@@ -99,6 +99,41 @@ export async function validateReservationQr(req, res) {
 
     if (!reservation) {
       const existing = await Reservation.findOne(query).select('+qrToken');
+
+      // If an ACTIVE parking session exists for this reservation, scanning again records EXIT
+      if (existing) {
+        const activeSession = await mongoose.model('ParkingSession').findOne({
+          reservationId: existing.reservationId,
+          status: 'ACTIVE',
+        });
+        if (activeSession) {
+          return res.status(200).json({
+            success: true,
+            action: 'exit',
+            message: 'Active parking session found. Ready for vehicle exit.',
+            data: {
+              action: 'exit',
+              reservation: {
+                reservationId: existing.reservationId,
+                slotId: existing.slotId,
+                vehicleId: existing.vehicleId,
+                startTime: existing.startTime,
+                endTime: existing.endTime,
+                status: existing.status,
+              },
+              session: {
+                _id: activeSession._id,
+                slotId: activeSession.slotId,
+                vehicleId: activeSession.vehicleId,
+                entryTime: activeSession.entryTime,
+                hourlyRate: activeSession.hourlyRate,
+                status: activeSession.status,
+              },
+            },
+          });
+        }
+      }
+
       const reason = !existing
         ? 'invalid_token'
         : existing.qrUsedAt

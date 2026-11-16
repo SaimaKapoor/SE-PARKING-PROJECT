@@ -5,7 +5,7 @@ import { fetchActiveSessions, recordStaffEntry, recordStaffExit, validateReserva
 export default function StaffQrScanner() {
   const [scanKey, setScanKey] = useState(0);
   const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState(null);
+  const [scanResult, setScanResult] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -13,7 +13,6 @@ export default function StaffQrScanner() {
   const [success, setSuccess] = useState('');
   const [actionLoading, setActionLoading] = useState('');
   const [lastSession, setLastSession] = useState(null);
-  const [manualCode, setManualCode] = useState('');
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
@@ -31,8 +30,13 @@ export default function StaffQrScanner() {
   useEffect(() => { Promise.resolve().then(loadSessions); }, [loadSessions]);
 
   useEffect(() => {
-    const scanner = new Html5QrcodeScanner(`staff-qr-reader-${scanKey}`, { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+    const scanner = new Html5QrcodeScanner(
+      `staff-qr-reader-${scanKey}`,
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      false
+    );
     let completed = false;
+
     scanner.render(async (decodedText) => {
       if (completed) return;
       completed = true;
@@ -40,57 +44,89 @@ export default function StaffQrScanner() {
       setError('');
       setActionError('');
       setSuccess('');
+      setScanResult(null);
+
       try {
-        const response = await validateReservationQr(decodedText);
-        setResult(response.data.reservation);
-        try {
-          if (scanner && typeof scanner.pause === 'function') {
+        if (scanner && typeof scanner.pause === 'function') {
+          try {
             await scanner.pause(true);
+          } catch {
+            // Scanner may not be streaming video (e.g. image drop / file upload)
           }
-        } catch {
-          // Scanner may not be streaming video (e.g. image drop / file upload)
         }
-      } catch (err) {
-        if (err.data?.data?.reservation) {
-          setResult(err.data.data.reservation);
-          setError('');
-          setSuccess('Reservation previously verified. Ready to record vehicle entry.');
+
+        const response = await validateReservationQr(decodedText);
+
+        if (response.action === 'exit' || response.data?.session) {
+          // Second scan: Vehicle is currently parked, automatically record EXIT
+          const exitSession = response.data.session;
+          const exitRes = await recordStaffExit(exitSession._id);
+          const updatedSession = exitRes.data.session;
+          setLastSession(updatedSession);
+          setScanResult({
+            type: 'EXIT',
+            session: updatedSession,
+          });
+          setSuccess(`Vehicle ${updatedSession.vehicleId} exit recorded automatically. Parking fee: ₹${updatedSession.fee}`);
         } else {
-          setResult(null);
+          // First scan: Automatically record ENTRY
+          const resData = response.data.reservation;
+          const entryRes = await recordStaffEntry(resData.reservationId);
+          const activeSession = entryRes.data.session;
+          setLastSession(activeSession);
+          setScanResult({
+            type: 'ENTRY',
+            reservation: resData,
+            session: activeSession,
+          });
+          setSuccess(`Vehicle ${activeSession.vehicleId} entry recorded automatically at slot ${activeSession.slotId}.`);
+        }
+        await loadSessions();
+      } catch (err) {
+        // Recovery logic if token was previously processed
+        if (err.data?.data?.activeSession) {
+          try {
+            const exitRes = await recordStaffExit(err.data.data.activeSession._id);
+            const updatedSession = exitRes.data.session;
+            setLastSession(updatedSession);
+            setScanResult({
+              type: 'EXIT',
+              session: updatedSession,
+            });
+            setSuccess(`Vehicle ${updatedSession.vehicleId} exit recorded automatically. Parking fee: ₹${updatedSession.fee}`);
+            await loadSessions();
+          } catch (exitErr) {
+            setError(exitErr.message || 'Could not record vehicle exit');
+            setScanResult(null);
+          }
+        } else if (err.data?.data?.reservation) {
+          try {
+            const entryRes = await recordStaffEntry(err.data.data.reservation.reservationId);
+            const activeSession = entryRes.data.session;
+            setLastSession(activeSession);
+            setScanResult({
+              type: 'ENTRY',
+              reservation: err.data.data.reservation,
+              session: activeSession,
+            });
+            setSuccess(`Vehicle ${activeSession.vehicleId} entry recorded automatically at slot ${activeSession.slotId}.`);
+            await loadSessions();
+          } catch (entryErr) {
+            setError(entryErr.message || 'Could not record vehicle entry');
+            setScanResult(null);
+          }
+        } else {
+          setScanResult(null);
           const errMsg = err.data?.message || err.message || (typeof err === 'string' ? err : 'QR validation failed');
           setError(errMsg);
-        }
-        try {
-          if (scanner && typeof scanner.pause === 'function') {
-            await scanner.pause(true);
-          }
-        } catch {
-          // ignore
         }
       } finally {
         setScanning(false);
       }
     }, () => {});
-    return () => { scanner.clear().catch(() => {}); };
-  }, [scanKey]);
 
-  const handleEntry = async () => {
-    if (!result) return;
-    setActionLoading('entry');
-    setActionError('');
-    setSuccess('');
-    try {
-      const response = await recordStaffEntry(result.reservationId);
-      setLastSession(response.data.session);
-      setSuccess(response.message || 'Vehicle entry recorded successfully');
-      setResult(null);
-      await loadSessions();
-    } catch (err) {
-      setActionError(err.message || 'Could not record vehicle entry');
-    } finally {
-      setActionLoading('');
-    }
-  };
+    return () => { scanner.clear().catch(() => {}); };
+  }, [scanKey, loadSessions]);
 
   const handleExit = async (session) => {
     setActionLoading(session._id);
@@ -108,35 +144,8 @@ export default function StaffQrScanner() {
     }
   };
 
-  const handleManualVerify = async (e) => {
-    if (e) e.preventDefault();
-    const code = manualCode.trim();
-    if (!code) return;
-    setScanning(true);
-    setError('');
-    setActionError('');
-    setSuccess('');
-    try {
-      const response = await validateReservationQr(code);
-      setResult(response.data.reservation);
-    } catch (err) {
-      if (err.data?.data?.reservation) {
-        setResult(err.data.data.reservation);
-        setError('');
-        setSuccess('Reservation previously verified. Ready to record vehicle entry.');
-      } else {
-        setResult(null);
-        const errMsg = err.data?.message || err.message || (typeof err === 'string' ? err : 'QR validation failed');
-        setError(errMsg);
-      }
-    } finally {
-      setScanning(false);
-    }
-  };
-
   const startAnotherScan = () => {
-    setResult(null);
-    setManualCode('');
+    setScanResult(null);
     setError('');
     setActionError('');
     setSuccess('');
@@ -164,45 +173,78 @@ export default function StaffQrScanner() {
       </section>}
 
       <section className="card">
-        <h2 className="section-title">Customer Entry</h2>
-        <p className="section-subtitle">Scan the reservation QR, then record the vehicle entry.</p>
-        <div id={`staff-qr-reader-${scanKey}`} />
-        {scanning && <p role="status">Validating QR code…</p>}
-        {error && <div role="alert" className="alert alert-error">{error}</div>}
-        {result && <div className="alert alert-success">
-          <strong>Reservation validated</strong>
-          <p>ID: {result.reservationId} · Slot: {result.slotId} · Vehicle: {result.vehicleId}</p>
-          <p>Window: {new Date(result.startTime).toLocaleString()} – {new Date(result.endTime).toLocaleString()}</p>
-          <button type="button" className="btn btn-primary btn-sm" onClick={handleEntry} disabled={Boolean(actionLoading)}>
-            {actionLoading === 'entry' ? 'Recording Entry…' : 'Record Vehicle Entry'}
-          </button>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={startAnotherScan} disabled={Boolean(actionLoading)}>Scan another QR</button>
-        </div>}
-        {error && <button type="button" className="btn btn-primary btn-sm" onClick={startAnotherScan}>Scan another QR</button>}
+        <h2 className="section-title">Customer Entry &amp; Exit Scanner</h2>
+        <p className="section-subtitle">
+          Scan the reservation QR. First scan automatically records entry; second scan automatically records exit.
+        </p>
 
-        <form onSubmit={handleManualVerify} style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid #e2e8f0' }}>
-          <label htmlFor="manual-code-input" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#334155', marginBottom: '0.5rem' }}>
-            Or verify by Reservation ID / Code:
-          </label>
-          <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '480px' }}>
-            <input
-              id="manual-code-input"
-              type="text"
-              className="form-control"
-              placeholder="e.g. RES-8TOP41DDDD"
-              value={manualCode}
-              onChange={(e) => setManualCode(e.target.value)}
-              disabled={scanning}
-            />
-            <button
-              type="submit"
-              className="btn btn-secondary"
-              disabled={!manualCode.trim() || scanning}
-            >
-              {scanning ? 'Verifying…' : 'Verify'}
-            </button>
+        <div id={`staff-qr-reader-${scanKey}`} />
+
+        {scanning && (
+          <div style={{ marginTop: '1rem', textAlign: 'center', color: '#475569', fontWeight: 500 }}>
+            Processing QR code and updating vehicle status…
           </div>
-        </form>
+        )}
+
+        {error && (
+          <div role="alert" className="alert alert-error" style={{ marginTop: '1.25rem', marginBottom: '0.5rem' }}>
+            <p style={{ margin: 0, fontWeight: 500 }}>{error}</p>
+            <div style={{ marginTop: '0.75rem' }}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={startAnotherScan}>
+                Scan Next QR
+              </button>
+            </div>
+          </div>
+        )}
+
+        {scanResult && scanResult.type === 'ENTRY' && (
+          <div className="alert alert-success" style={{ marginTop: '1.25rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <strong style={{ fontSize: '1rem', color: '#166534' }}>
+                Vehicle Entry Recorded
+              </strong>
+              <span className="status-pill pill-confirmed">ACTIVE</span>
+            </div>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>
+              <strong>Vehicle:</strong> {scanResult.session.vehicleId} &nbsp;·&nbsp;
+              <strong>Slot:</strong> {scanResult.session.slotId} &nbsp;·&nbsp;
+              <strong>Reservation:</strong> {scanResult.reservation?.reservationId || scanResult.session.reservationId}
+            </p>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: '#15803d' }}>
+              Entry Time: {new Date(scanResult.session.entryTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </p>
+            <div style={{ marginTop: '1rem' }}>
+              <button type="button" className="btn btn-primary btn-sm" onClick={startAnotherScan}>
+                Scan Next QR
+              </button>
+            </div>
+          </div>
+        )}
+
+        {scanResult && scanResult.type === 'EXIT' && (
+          <div className="alert alert-success" style={{ marginTop: '1.25rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <strong style={{ fontSize: '1rem', color: '#166534' }}>
+                Vehicle Exit Recorded
+              </strong>
+              <span className="status-pill pill-awaiting">AWAITING PAYMENT</span>
+            </div>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>
+              <strong>Vehicle:</strong> {scanResult.session.vehicleId} &nbsp;·&nbsp;
+              <strong>Slot:</strong> {scanResult.session.slotId} &nbsp;·&nbsp;
+              <strong>Fee:</strong> ₹{scanResult.session.fee}
+            </p>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: '#15803d' }}>
+              Duration: {scanResult.session.durationHours || 1} hr ({scanResult.session.durationMinutes || 0} min) &nbsp;·&nbsp;
+              Exit Time: {new Date(scanResult.session.exitTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </p>
+            <div style={{ marginTop: '1rem' }}>
+              <button type="button" className="btn btn-primary btn-sm" onClick={startAnotherScan}>
+                Scan Next QR
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="card">

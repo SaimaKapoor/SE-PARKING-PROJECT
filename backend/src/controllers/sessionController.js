@@ -215,6 +215,15 @@ export async function recordStaffExit(req, res) {
     session.fee = calculateParkingFee(durationMinutes, session.hourlyRate);
     session.status = 'AWAITING_PAYMENT';
     await session.save();
+
+    const slot = await ParkingSlot.findOne({ slotId: session.slotId });
+    if (slot && String(slot.currentSessionId) === String(session._id)) {
+      slot.status = 'AVAILABLE';
+      slot.currentSessionId = null;
+      slot.currentReservationId = null;
+      await slot.save();
+    }
+
     return res.json({ success: true, message: 'Exit recorded; payment is pending', data: { session } });
   } catch (error) {
     console.error('Staff exit error:', error.message);
