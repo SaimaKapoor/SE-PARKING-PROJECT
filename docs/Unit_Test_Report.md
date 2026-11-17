@@ -15,11 +15,11 @@
 
 | Metric | Result |
 | :--- | :--- |
-| **Total Test Suites** | 17 passed, 17 total (100%) |
-| **Total Tests** | 113 passed, 113 total (100%) |
+| **Total Test Suites** | 18 passed, 18 total (100%) |
+| **Total Tests** | 115 passed, 115 total (100%) |
 | **Failed Tests** | 0 |
 | **Skipped Tests** | 0 |
-| **Execution Duration** | 58.66 seconds (in-band run) |
+| **Execution Duration** | 46.33 seconds (in-band run) |
 | **Pass Rate** | **100%** |
 
 ---
@@ -309,3 +309,14 @@ All 11 suites execute in-band against isolated in-memory MongoDB databases with 
 | 1 | Execute atomic multi-document transaction with automated rollback | `mongoTransaction.runInTransaction` | Rolls back state on injected error; zero orphaned records created | Passed |
 | 2 | Maintain 100% data consistency across 100 concurrent/sequential operations | Multi-document booking | 100/100 simulated operations preserve data integrity without state drift | Passed |
 | 3 | Graceful fallback when standalone MongoDB instance has no replica set | `runInTransaction` | Executes work function safely without throwing replica set exceptions | Passed |
+
+---
+
+### Suite 18: Performance & Load Testing (`backend/tests/performance.test.js`)
+**Scope**: Verification of NFR-001 / PERF-01 (slot availability responds in under 2 seconds for >= 95% of concurrent requests).  
+**Result**: 2 passed, 0 failed.
+
+| # | Test Name | Target Function / Route | Assertion Verified | Status |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | Responds within 2 seconds for at least 95% of concurrent availability requests (PERF-01) | `GET /api/slots?status=AVAILABLE` | 50 concurrent requests; 100% complete in < 215ms (average 191.6ms) | Passed |
+| 2 | Responds within 2 seconds under concurrent filtered queries (floor and type) | `GET /api/slots?status=AVAILABLE&type=...&floor=...` | 30 concurrent filtered queries complete in < 120ms | Passed |
